@@ -1,0 +1,364 @@
+// =============================================================
+// ForgeQuote — Prisma Schema
+// PostgreSQL · Decimal fields for all money · UUID primary keys
+// =============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum Role {
+  ESTIMATOR
+  SALES_HEAD
+}
+
+enum RFQStatus {
+  ESTIMATING
+  SENT
+  WON
+  LOST
+}
+
+enum QuotationStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  READY_TO_SEND
+  SENT
+}
+
+enum RateType {
+  MATERIAL
+  MACHINE_HOUR
+  OVERHEAD
+  PACKING
+  FREIGHT
+  GST
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AIExtractionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  VERIFIED
+}
+
+// ─── Models ───────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions           Session[]
+  ownedRFQs          RFQ[]
+  createdRates       RateMaster[]
+  createdQuotations  Quotation[]  @relation("CreatedQuotations")
+  approvedQuotations Quotation[]  @relation("ApprovedQuotations")
+  approvals          Approval[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id             String   @id @default(uuid())
+  userId         String
+  tokenHash      String   @unique
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  lastActivityAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model RFQ {
+  id           String    @id @default(uuid())
+  rfqNumber    String    @unique
+  customerName String
+  customerType String?
+  receivedAt   DateTime  @default(now())
+  dueDate      DateTime?
+  ownerId      String
+  status       RFQStatus @default(ESTIMATING)
+  lostReason   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  owner       User           @relation(fields: [ownerId], references: [id])
+  parts       Part[]
+  quotations  Quotation[]
+  extractions AIExtraction[]
+
+  @@index([rfqNumber])
+  @@index([customerName])
+  @@index([status])
+  @@index([dueDate])
+  @@index([ownerId])
+  @@map("rfqs")
+}
+
+model Part {
+  id              String   @id @default(uuid())
+  rfqId           String
+  partNumber      String?
+  partName        String
+  material        String?
+  grossWeightKg   Decimal? @db.Decimal(10, 4)
+  netWeightKg     Decimal? @db.Decimal(10, 4)
+  scrapPercentage Decimal? @db.Decimal(5, 2)
+  annualVolume    Int?
+  setupHours      Decimal? @db.Decimal(8, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rfq               RFQ                @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  operations        PartOperation[]
+  quotationParts    QuotationPart[]
+  targetSuggestions RoutingSuggestion[] @relation("TargetPart")
+  sourceSuggestions RoutingSuggestion[] @relation("SourcePart")
+
+  @@index([rfqId])
+  @@index([partName])
+  @@index([material])
+  @@map("parts")
+}
+
+model PartOperation {
+  id                   String   @id @default(uuid())
+  partId               String
+  operationSequence    Int
+  operationName        String
+  machineType          String
+  cycleTimeMinutes     Decimal  @db.Decimal(8, 2)
+  machineHourRate      Decimal  @db.Decimal(10, 2)
+  machineRateVersionId String?
+  setupHours           Decimal? @db.Decimal(8, 2)
+
+  part               Part        @relation(fields: [partId], references: [id], onDelete: Cascade)
+  machineRateVersion RateMaster? @relation(fields: [machineRateVersionId], references: [id])
+
+  @@index([partId])
+  @@map("part_operations")
+}
+
+model RateMaster {
+  id            String    @id @default(uuid())
+  rateType      RateType
+  rateName      String
+  materialGrade String?
+  machineType   String?
+  rateValue     Decimal   @db.Decimal(12, 4)
+  unit          String
+  currency      String    @default("INR")
+  versionNumber Int
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  isActive      Boolean   @default(true)
+  createdBy     String
+  createdAt     DateTime  @default(now())
+
+  creator            User                    @relation(fields: [createdBy], references: [id])
+  partOperations     PartOperation[]
+  quotationSnapshots QuotationRateSnapshot[]
+
+  @@index([rateType, effectiveFrom])
+  @@index([rateName, rateType])
+  @@index([isActive])
+  @@map("rate_masters")
+}
+
+model Quotation {
+  id                  String          @id @default(uuid())
+  rfqId               String
+  quotationNumber     String          @unique
+  versionNumber       Int             @default(1)
+  status              QuotationStatus @default(DRAFT)
+  subtotalBeforeTax   Decimal?        @db.Decimal(14, 2)
+  annualContractValue Decimal?        @db.Decimal(14, 2)
+  marginPercentage    Decimal?        @db.Decimal(5, 2)
+  gstPercentage       Decimal?        @db.Decimal(5, 2)
+  gstAmount           Decimal?        @db.Decimal(14, 2)
+  totalIncludingGST   Decimal?        @db.Decimal(14, 2)
+  rateSnapshot        Json?
+  calculationSnapshot Json?
+  calculationVersion  String          @default("1.0")
+  createdBy           String
+  approvedBy          String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  rfq           RFQ                    @relation(fields: [rfqId], references: [id])
+  creator       User                   @relation("CreatedQuotations", fields: [createdBy], references: [id])
+  approver      User?                  @relation("ApprovedQuotations", fields: [approvedBy], references: [id])
+  parts         QuotationPart[]
+  rateSnapshots QuotationRateSnapshot[]
+  approvals     Approval[]
+
+  @@index([quotationNumber])
+  @@index([status])
+  @@index([rfqId])
+  @@index([createdBy])
+  @@map("quotations")
+}
+
+model QuotationPart {
+  id                       String  @id @default(uuid())
+  quotationId              String
+  partId                   String
+  quotedAnnualVolume       Int
+  materialCost             Decimal @db.Decimal(12, 4)
+  conversionCost           Decimal @db.Decimal(12, 4)
+  setupCost                Decimal @db.Decimal(12, 4)
+  overheadCost             Decimal @db.Decimal(12, 4)
+  packingCost              Decimal @db.Decimal(12, 4)
+  freightCost              Decimal @db.Decimal(12, 4)
+  totalCostPerUnit         Decimal @db.Decimal(12, 4)
+  marginPercentage         Decimal @db.Decimal(5, 2)
+  sellingPriceBeforeGST    Decimal @db.Decimal(12, 4)
+  gstAmountPerUnit         Decimal @db.Decimal(12, 4)
+  sellingPriceIncludingGST Decimal @db.Decimal(12, 4)
+
+  quotation Quotation       @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  part      Part            @relation(fields: [partId], references: [id])
+  tiers     QuotationTier[]
+
+  @@index([quotationId])
+  @@index([partId])
+  @@map("quotation_parts")
+}
+
+model QuotationTier {
+  id                       String  @id @default(uuid())
+  quotationPartId          String
+  annualVolume             Int
+  materialCost             Decimal @db.Decimal(12, 4)
+  conversionCost           Decimal @db.Decimal(12, 4)
+  setupCost                Decimal @db.Decimal(12, 4)
+  overheadCost             Decimal @db.Decimal(12, 4)
+  packingCost              Decimal @db.Decimal(12, 4)
+  freightCost              Decimal @db.Decimal(12, 4)
+  totalCostPerUnit         Decimal @db.Decimal(12, 4)
+  sellingPriceBeforeGST    Decimal @db.Decimal(12, 4)
+  gstAmount                Decimal @db.Decimal(12, 4)
+  sellingPriceIncludingGST Decimal @db.Decimal(12, 4)
+
+  quotationPart QuotationPart @relation(fields: [quotationPartId], references: [id], onDelete: Cascade)
+
+  @@index([quotationPartId])
+  @@map("quotation_tiers")
+}
+
+model QuotationRateSnapshot {
+  id            String    @id @default(uuid())
+  quotationId   String
+  rateMasterId  String
+  rateType      RateType
+  versionNumber Int
+  rateValue     Decimal   @db.Decimal(12, 4)
+  unit          String
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  quotation  Quotation  @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  rateMaster RateMaster @relation(fields: [rateMasterId], references: [id])
+
+  @@index([quotationId])
+  @@map("quotation_rate_snapshots")
+}
+
+model Approval {
+  id          String         @id @default(uuid())
+  quotationId String
+  approverId  String
+  status      ApprovalStatus @default(PENDING)
+  comment     String?
+  actionAt    DateTime?
+  createdAt   DateTime       @default(now())
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  approver  User      @relation(fields: [approverId], references: [id])
+
+  @@index([quotationId])
+  @@index([approverId])
+  @@map("approvals")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  action     String
+  entityType String
+  entityId   String
+  oldValues  Json?
+  newValues  Json?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model AIExtraction {
+  id             String             @id @default(uuid())
+  rfqId          String
+  inputHash      String
+  provider       String
+  model          String
+  extractedData  Json?
+  confidenceData Json?
+  sourceData     Json?
+  status         AIExtractionStatus @default(PENDING)
+  errorCode      String?
+  createdAt      DateTime           @default(now())
+
+  rfq RFQ @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+
+  @@index([rfqId])
+  @@index([inputHash])
+  @@map("ai_extractions")
+}
+
+model RoutingSuggestion {
+  id              String   @id @default(uuid())
+  targetPartId    String
+  sourcePartId    String
+  similarityScore Decimal  @db.Decimal(5, 4)
+  suggestionData  Json?
+  accepted        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  targetPart Part @relation("TargetPart", fields: [targetPartId], references: [id], onDelete: Cascade)
+  sourcePart Part @relation("SourcePart", fields: [sourcePartId], references: [id])
+
+  @@index([targetPartId])
+  @@index([sourcePartId])
+  @@map("routing_suggestions")
+}
