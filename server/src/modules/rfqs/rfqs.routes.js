@@ -11,6 +11,8 @@ import {
   listRFQsQuerySchema,
 } from './rfqs.validation.js';
 import * as rfqController from './rfqs.controller.js';
+import * as partController from '../parts/parts.controller.js';
+import { createPartSchema } from '../parts/parts.validation.js';
 
 const router = Router();
 
@@ -46,6 +48,13 @@ router.patch(
   requireRole('SALES_HEAD'),
   validate(updateRFQStatusSchema),
   asyncHandler(rfqController.updateRFQStatus)
+);
+
+router.post(
+  '/:rfqId/parts',
+  requireRole('ESTIMATOR'),
+  validate(createPartSchema),
+  asyncHandler(partController.createPart)
 );
 
 export default router;

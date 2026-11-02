@@ -14,6 +14,7 @@ import { NotFoundError } from './utils/errors.js';
 // Route imports
 import authRoutes from './modules/auth/auth.routes.js';
 import rfqRoutes from './modules/rfqs/rfqs.routes.js';
+import partRoutes from './modules/parts/parts.routes.js';
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.get('/api/v1/health', (req, res) => {
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/rfqs', rfqRoutes);
+app.use('/api/v1/parts', partRoutes);
 
 // Catch-all for undefined routes
 app.use((req, res, next) => {
