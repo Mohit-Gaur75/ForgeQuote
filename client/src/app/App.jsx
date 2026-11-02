@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { AppShell } from '../components/layout/AppShell';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { RFQDetailPage } from '../pages/RFQDetailPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -47,6 +48,7 @@ export function App() {
       >
         <Route index element={<Navigate to="/rfqs" replace />} />
         <Route path="rfqs" element={<DashboardPage />} />
+        <Route path="rfqs/:id" element={<RFQDetailPage />} />
         <Route path="rates" element={<div className="p-4 bg-white rounded border">Rate Masters Workspace</div>} />
         <Route path="approvals" element={<div className="p-4 bg-white rounded border">Commercial Approvals Inbox</div>} />
         <Route path="history" element={<div className="p-4 bg-white rounded border">Historical Parts Search</div>} />
