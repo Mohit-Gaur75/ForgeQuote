@@ -35,3 +35,5 @@ export function formatLakhCrore(amount) {
   }
   return formatINR(num);
 }
+
+export const formatCurrency = formatINR;
