@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../../src/app.js';
 import { prisma } from '../../src/config/database.js';
@@ -10,6 +10,9 @@ describe('Rate Master API Integration Tests (/api/v1/rates)', () => {
 
   beforeAll(async () => {
     await prisma.$connect();
+    await prisma.rateMaster.deleteMany({
+      where: { rateName: 'Test Rate Dynamic' },
+    });
 
     const estRes = await request(app)
       .post('/api/v1/auth/login')
@@ -25,6 +28,12 @@ describe('Rate Master API Integration Tests (/api/v1/rates)', () => {
       where: { rateName: 'EN8 Bright Bar' },
     });
     en8RateId = en8.id;
+  });
+
+  afterAll(async () => {
+    await prisma.rateMaster.deleteMany({
+      where: { rateName: 'Test Rate Dynamic' },
+    });
   });
 
   it('GET /rates - retrieves list of rates with pagination', async () => {
@@ -67,12 +76,27 @@ describe('Rate Master API Integration Tests (/api/v1/rates)', () => {
   });
 
   it('POST /rates - allows Sales Head to create a new version of a rate', async () => {
+    // First create base version
+    await request(app)
+      .post('/api/v1/rates')
+      .set('Cookie', salesCookie)
+      .send({
+        rateType: 'MATERIAL',
+        rateName: 'Test Rate Dynamic',
+        materialGrade: 'EN8',
+        rateValue: 80.00,
+        unit: 'INR/kg',
+        currency: 'INR',
+        effectiveFrom: '2026-01-01T00:00:00.000Z',
+      });
+
+    // Create next version
     const res = await request(app)
       .post('/api/v1/rates')
       .set('Cookie', salesCookie)
       .send({
         rateType: 'MATERIAL',
-        rateName: 'EN8 Bright Bar',
+        rateName: 'Test Rate Dynamic',
         materialGrade: 'EN8',
         rateValue: 92.50,
         unit: 'INR/kg',
@@ -82,7 +106,7 @@ describe('Rate Master API Integration Tests (/api/v1/rates)', () => {
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.versionNumber).toBeGreaterThanOrEqual(3);
+    expect(res.body.data.versionNumber).toBe(2);
     expect(Number(res.body.data.rateValue)).toBe(92.50);
   });
 
