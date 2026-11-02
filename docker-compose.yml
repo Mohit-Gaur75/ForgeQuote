@@ -1,0 +1,91 @@
+services:
+  # ─── PostgreSQL Database ──────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: forgequote_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-forgequote}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-forgequote}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-forgequote} -d ${POSTGRES_DB:-forgequote}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - forgequote_net
+
+  # ─── Express Backend ──────────────────────────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+    container_name: forgequote_server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-forgequote}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-forgequote}?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:-dev_secret_change_in_production_32chars}
+      SESSION_EXPIRY_HOURS: ${SESSION_EXPIRY_HOURS:-24}
+      COOKIE_SECURE: "false"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      PORT: 4000
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Kolkata}
+      SEED_ESTIMATOR_PASSWORD: ${SEED_ESTIMATOR_PASSWORD:-Estimator@123}
+      SEED_SALES_PASSWORD: ${SEED_SALES_PASSWORD:-Sales@123}
+      APPROVAL_THRESHOLD: ${APPROVAL_THRESHOLD:-2500000}
+    volumes:
+      - ./server/src:/app/src
+      - ./server/prisma:/app/prisma
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4000/api/v1/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - forgequote_net
+
+  # ─── React Frontend ───────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: development
+    container_name: forgequote_client
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      VITE_API_URL: http://localhost:4000
+    volumes:
+      - ./client/src:/app/src
+      - ./client/index.html:/app/index.html
+    ports:
+      - "5173:5173"
+    networks:
+      - forgequote_net
+
+# ─── Volumes ──────────────────────────────────────────────────
+volumes:
+  pgdata:
+    driver: local
+
+# ─── Networks ─────────────────────────────────────────────────
+networks:
+  forgequote_net:
+    driver: bridge

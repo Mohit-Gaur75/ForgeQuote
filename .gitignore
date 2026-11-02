@@ -1,0 +1,45 @@
+# Environment files - NEVER commit these
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Node modules
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs
+client/dist/
+client/.vite/
+
+# Prisma generated client (regenerated on install)
+server/node_modules/.prisma/
+
+# Logs
+*.log
+logs/
+pino-*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Docker volumes (local data, not code)
+pgdata/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+
+# Temporary
+tmp/
+temp/
