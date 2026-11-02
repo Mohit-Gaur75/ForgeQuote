@@ -18,6 +18,7 @@ import { useAuth } from '../hooks/useAuth';
 import { RFQStatusBadge } from '../components/rfq/RFQStatusBadge';
 import { PartsTable } from '../components/parts/PartsTable';
 import { AddPartModal } from '../components/parts/AddPartModal';
+import { AIIntakeModal } from '../components/ai/AIIntakeModal';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
 import { formatLakhCrore } from '../utils/currency';
@@ -27,6 +28,7 @@ export function RFQDetailPage() {
   const navigate = useNavigate();
   const { isEstimator } = useAuth();
   const [isAddPartModalOpen, setIsAddPartModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { data: rfq, isLoading, isError, error, refetch } = useRFQ(id);
 
@@ -150,13 +152,15 @@ export function RFQDetailPage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => alert('AI Intake Workspace will open for pasted email & BOM extraction (Day 3 feature).')}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-blue-900 hover:bg-blue-50 text-xs font-semibold rounded-md shadow transition shrink-0"
-        >
-          <span>Open AI Intake</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        {isEstimator && (
+          <button
+            onClick={() => setIsAIModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-blue-900 hover:bg-blue-50 text-xs font-semibold rounded-md shadow transition shrink-0"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>Open AI Intake</span>
+          </button>
+        )}
       </div>
 
       {/* Parts Table Section */}
@@ -215,6 +219,14 @@ export function RFQDetailPage() {
         isOpen={isAddPartModalOpen}
         onClose={() => setIsAddPartModalOpen(false)}
         rfqId={rfq.id}
+      />
+
+      {/* AI Extraction & Ingestion Modal */}
+      <AIIntakeModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        rfqId={rfq.id}
+        onConfirmed={refetch}
       />
     </div>
   );
