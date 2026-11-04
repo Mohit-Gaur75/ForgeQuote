@@ -42,6 +42,15 @@ describe('RFQ API Integration Tests (/api/v1/rfqs)', () => {
   });
 
   it('GET /rfqs - identifies overdue RFQs correctly', async () => {
+    // Ensure RFQ-2026-0004 is in ESTIMATING status with past due date for idempotent test runs
+    await prisma.rFQ.updateMany({
+      where: { rfqNumber: 'RFQ-2026-0004' },
+      data: {
+        status: 'ESTIMATING',
+        dueDate: new Date(Date.now() - 3 * 86400000),
+      },
+    });
+
     const res = await request(app)
       .get('/api/v1/rfqs?isOverdue=true')
       .set('Cookie', salesCookie);
