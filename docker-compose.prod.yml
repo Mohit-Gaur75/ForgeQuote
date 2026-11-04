@@ -1,0 +1,89 @@
+# docker-compose.prod.yml
+# Production multi-stage Docker Compose orchestration for ForgeQuote
+services:
+  # ─── PostgreSQL Database ──────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: forgequote_prod_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-forgequote}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_strong_password}
+      POSTGRES_DB: ${POSTGRES_DB:-forgequote}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-forgequote} -d ${POSTGRES_DB:-forgequote}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - forgequote_prod_net
+
+  # ─── Express Backend (Production Stage) ───────────────────────
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: production
+    container_name: forgequote_prod_server
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-forgequote}:${POSTGRES_PASSWORD:-changeme_strong_password}@postgres:5432/${POSTGRES_DB:-forgequote}?schema=public
+      SESSION_SECRET: ${SESSION_SECRET:-prod_secret_must_be_set_in_production_environment_32chars}
+      SESSION_EXPIRY_HOURS: ${SESSION_EXPIRY_HOURS:-24}
+      COOKIE_SECURE: "false" # Set true if terminating SSL at domain proxy
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      PORT: 4000
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Kolkata}
+      APPROVAL_THRESHOLD: ${APPROVAL_THRESHOLD:-2500000}
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4000/api/v1/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - forgequote_prod_net
+
+  # ─── React Frontend (Nginx Production Stage) ──────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_API_URL: /api/v1
+    container_name: forgequote_prod_client
+    restart: always
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - forgequote_prod_net
+
+# ─── Volumes ──────────────────────────────────────────────────
+volumes:
+  pgdata_prod:
+    driver: local
+
+# ─── Networks ─────────────────────────────────────────────────
+networks:
+  forgequote_prod_net:
+    driver: bridge

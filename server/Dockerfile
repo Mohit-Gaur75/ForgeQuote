@@ -3,7 +3,7 @@ FROM node:24-alpine AS development
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 RUN npm install
 
 COPY prisma ./prisma
@@ -22,7 +22,7 @@ WORKDIR /app
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
 
-COPY package.json ./
+COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY prisma ./prisma

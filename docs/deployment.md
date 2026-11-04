@@ -90,6 +90,19 @@ docker compose exec server node prisma/seed.js
 * **Backend Health Check**: [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health)
 * **Database Connection**: `localhost:5432` (User: `forgequote`, Pass: `changeme`, DB: `forgequote`)
 
+### 3.5 Multi-Stage Production Stack (`docker-compose.prod.yml`)
+For production deployment with optimized static Nginx bundling and hardened non-root backend:
+```powershell
+# Build and launch multi-stage production containers
+docker compose -f docker-compose.prod.yml up --build -d
+
+# Execute migrations and seed
+docker compose -f docker-compose.prod.yml exec server npx prisma migrate deploy
+docker compose -f docker-compose.prod.yml exec server node prisma/seed.js
+```
+* **Production Frontend (Nginx)**: [http://localhost:8080](http://localhost:8080)
+* **Production Backend API**: [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health)
+
 ---
 
 ## 4. Docker Management Command Reference (PowerShell)

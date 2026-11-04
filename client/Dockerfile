@@ -3,7 +3,7 @@ FROM node:24-alpine AS development
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 RUN npm install
 
 COPY . .
@@ -17,7 +17,7 @@ FROM node:24-alpine AS build
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 RUN npm ci
 
 COPY . .
