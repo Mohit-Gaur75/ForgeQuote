@@ -13,6 +13,8 @@ import {
 import * as rfqController from './rfqs.controller.js';
 import * as partController from '../parts/parts.controller.js';
 import { createPartSchema } from '../parts/parts.validation.js';
+import * as quotationController from '../quotations/quotation.controller.js';
+import { createQuotationSchema } from '../quotations/quotation.validation.js';
 
 const router = Router();
 
@@ -55,6 +57,13 @@ router.post(
   requireRole('ESTIMATOR'),
   validate(createPartSchema),
   asyncHandler(partController.createPart)
+);
+
+router.post(
+  '/:rfqId/quotations',
+  requireRole('ESTIMATOR'),
+  validate(createQuotationSchema),
+  asyncHandler(quotationController.createQuotation)
 );
 
 export default router;

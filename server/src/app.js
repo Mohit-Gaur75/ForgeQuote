@@ -18,6 +18,8 @@ import partRoutes from './modules/parts/parts.routes.js';
 import aiRoutes from './modules/ai/ai.routes.js';
 import ratesRoutes from './modules/rates/rates.routes.js';
 import costingRoutes from './modules/costing/costing.routes.js';
+import quotationRoutes from './modules/quotations/quotation.routes.js';
+import approvalRoutes from './modules/approvals/approval.routes.js';
 
 const app = express();
 
@@ -86,6 +88,8 @@ app.use('/api/v1/rfqs', aiRoutes);
 app.use('/api/v1/parts', partRoutes);
 app.use('/api/v1/parts', costingRoutes);
 app.use('/api/v1/rates', ratesRoutes);
+app.use('/api/v1/quotations', quotationRoutes);
+app.use('/api/v1/approvals', approvalRoutes);
 
 // Catch-all for undefined routes
 app.use((req, res, next) => {
