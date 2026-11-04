@@ -17,6 +17,9 @@ router.use(authenticate);
 // Get quotation details by ID
 router.get('/:id', asyncHandler(quotationController.getQuotation));
 
+// Generate and stream industrial quotation PDF
+router.get('/:id/pdf', asyncHandler(quotationController.downloadQuotationPDF));
+
 // Submit quotation for commercial approval
 router.post('/:id/submit', asyncHandler(quotationController.submitQuotation));
 

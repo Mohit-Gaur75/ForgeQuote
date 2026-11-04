@@ -1,5 +1,6 @@
 // server/src/modules/quotations/quotation.controller.js
 import * as quotationService from './quotation.service.js';
+import * as pdfService from '../pdf/pdf.service.js';
 
 export async function createQuotation(req, res) {
   const { rfqId } = req.params;
@@ -35,4 +36,10 @@ export async function sendQuotation(req, res) {
     success: true,
     data: result,
   });
+}
+
+export async function downloadQuotationPDF(req, res) {
+  const { id } = req.params;
+  const quotation = await quotationService.getQuotationById(req.user, id);
+  pdfService.generateQuotationPDF(quotation, res);
 }

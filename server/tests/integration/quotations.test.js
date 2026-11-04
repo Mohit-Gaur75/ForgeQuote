@@ -108,6 +108,18 @@ describe('Quotations & Commercial Approvals Integration Tests', () => {
     expect(res.body.data.id).toBe(createdQuotationId);
   });
 
+  it('GET /quotations/:id/pdf - streams a valid industrial quotation PDF', async () => {
+    const res = await request(app)
+      .get(`/api/v1/quotations/${createdQuotationId}/pdf`)
+      .set('Cookie', estimatorCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/pdf');
+    expect(res.headers['content-disposition']).toContain('inline; filename=');
+    // PDF Magic bytes: %PDF-
+    expect(res.body.toString().slice(0, 5)).toBe('%PDF-');
+  });
+
   it('GET /approvals - allows Sales Head to list high-value pending quotations', async () => {
     const res = await request(app)
       .get('/api/v1/approvals')
