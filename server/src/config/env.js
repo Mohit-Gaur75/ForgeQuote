@@ -1,7 +1,15 @@
 // server/src/config/env.js
+import fs from 'node:fs';
 import { z } from 'zod';
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
+
+// Auto-detect host vs Docker environment:
+// If running on host (outside container) and DATABASE_URL uses the container hostname 'postgres:5432',
+// transparently rewrite to 'localhost:5432' so local Node processes connect seamlessly.
+if (!fs.existsSync('/.dockerenv') && process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@postgres:5432')) {
+  process.env.DATABASE_URL = process.env.DATABASE_URL.replace('@postgres:5432', '@localhost:5432');
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
