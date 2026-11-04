@@ -22,6 +22,7 @@ import { usePartCosting, useCalculateCosting, useSaveCosting } from '../hooks/us
 import { useEffectiveRates } from '../hooks/useRates';
 import { OperationsEditor } from '../components/costing/OperationsEditor';
 import { VolumeTiersCard } from '../components/costing/VolumeTiersCard';
+import { RoutingSuggestionsModal } from '../components/costing/RoutingSuggestionsModal';
 import { formatCurrency } from '../utils/currency';
 
 export function CostingPage() {
@@ -55,7 +56,9 @@ export function CostingPage() {
   // Calculation Results
   const [calculation, setCalculation] = useState(null);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [routingAdoptedMsg, setRoutingAdoptedMsg] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isRoutingModalOpen, setIsRoutingModalOpen] = useState(false);
 
   // Populate from fetched part data
   useEffect(() => {
@@ -171,6 +174,18 @@ export function CostingPage() {
     }
   };
 
+  const handleApplyRouting = (adoptedOps, sourcePartName, similarityPercentage) => {
+    const updated = { ...formData, operations: adoptedOps };
+    setFormData(updated);
+    setHasUnsavedChanges(true);
+    setSaveSuccessMsg('');
+    setRoutingAdoptedMsg(
+      `Adopted ${adoptedOps.length} manufacturing operations from historical part "${sourcePartName}" (${similarityPercentage}% match). Review cycle times and save draft.`
+    );
+    // Immediately re-run calculation with the adopted operations
+    runCalculation(updated);
+  };
+
   if (isPartLoading) {
     return (
       <div className="py-24 flex flex-col items-center justify-center gap-3 text-slate-500">
@@ -246,6 +261,22 @@ export function CostingPage() {
           </div>
           <button
             onClick={() => setSaveSuccessMsg('')}
+            className="text-[11px] font-bold hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {/* Routing Adopted Notification Banner */}
+      {routingAdoptedMsg && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md flex items-center justify-between text-xs text-amber-900">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{routingAdoptedMsg}</span>
+          </div>
+          <button
+            onClick={() => setRoutingAdoptedMsg('')}
             className="text-[11px] font-bold hover:underline"
           >
             Dismiss
@@ -358,6 +389,7 @@ export function CostingPage() {
             operations={formData.operations}
             onChange={(ops) => handleFieldChange('operations', ops)}
             effectiveRates={effectiveRates}
+            onOpenSuggestions={() => setIsRoutingModalOpen(true)}
           />
 
           {/* Section 3: Logistics & Commercial Margins */}
@@ -598,6 +630,14 @@ export function CostingPage() {
           </button>
         </div>
       </div>
+      {/* Routing Suggestions Modal */}
+      <RoutingSuggestionsModal
+        isOpen={isRoutingModalOpen}
+        onClose={() => setIsRoutingModalOpen(false)}
+        partId={partId}
+        targetPart={part}
+        onApplyOperations={handleApplyRouting}
+      />
     </div>
   );
 }

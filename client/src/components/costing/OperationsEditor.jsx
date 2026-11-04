@@ -1,6 +1,6 @@
 // client/src/components/costing/OperationsEditor.jsx
 import React from 'react';
-import { Plus, Trash2, Cpu, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Cpu, Clock, AlertCircle, Zap } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
 const DEFAULT_MACHINE_TYPES = [
@@ -17,6 +17,7 @@ export function OperationsEditor({
   operations = [],
   onChange,
   effectiveRates,
+  onOpenSuggestions,
 }) {
   // Machine hour rates from backend if available
   const machineRates = effectiveRates?.MACHINE_HOUR || [];
@@ -105,14 +106,28 @@ export function OperationsEditor({
             <span className="text-slate-400">({totalCycleMinutes.toFixed(2)} min)</span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAddOperation}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium shadow-sm transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Operation</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenSuggestions && (
+              <button
+                type="button"
+                onClick={onOpenSuggestions}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-bold shadow-sm transition"
+                title="Scan historical parts and auto-fill routing"
+              >
+                <Zap className="w-3.5 h-3.5 fill-white" />
+                <span>Reuse Similar Routing</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={handleAddOperation}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium shadow-sm transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Operation</span>
+            </button>
+          </div>
         </div>
       </div>
 
