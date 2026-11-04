@@ -9,6 +9,7 @@ import { RFQDetailPage } from '../pages/RFQDetailPage';
 import { RateMasterPage } from '../pages/RateMasterPage';
 import { CostingPage } from '../pages/CostingPage';
 import { ApprovalInboxPage } from '../pages/ApprovalInboxPage';
+import { QuotationDetailPage } from '../pages/QuotationDetailPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -53,6 +54,7 @@ export function App() {
         <Route path="rfqs" element={<DashboardPage />} />
         <Route path="rfqs/:id" element={<RFQDetailPage />} />
         <Route path="costing/:id" element={<CostingPage />} />
+        <Route path="quotations/:id" element={<QuotationDetailPage />} />
         <Route path="rates" element={<RateMasterPage />} />
         <Route path="approvals" element={<ApprovalInboxPage />} />
         <Route path="history" element={<div className="p-4 bg-white rounded border">Historical Parts Search</div>} />

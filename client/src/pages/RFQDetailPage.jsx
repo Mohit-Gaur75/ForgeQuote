@@ -22,6 +22,7 @@ import { AIIntakeModal } from '../components/ai/AIIntakeModal';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
 import { formatLakhCrore } from '../utils/currency';
+import { useCreateQuotation } from '../hooks/useQuotations';
 
 export function RFQDetailPage() {
   const { id } = useParams();
@@ -31,6 +32,23 @@ export function RFQDetailPage() {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { data: rfq, isLoading, isError, error, refetch } = useRFQ(id);
+  const createQuoteMutation = useCreateQuotation(id);
+  const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
+
+  const handleGenerateQuotation = async () => {
+    setIsGeneratingQuote(true);
+    try {
+      const res = await createQuoteMutation.mutateAsync({
+        marginPercentage: 15.0,
+        gstPercentage: 18.0,
+      });
+      navigate(`/quotations/${res.id}`);
+    } catch (err) {
+      alert(err.message || 'Failed to generate quotation. Please ensure all parts have operations configured in Costing.');
+    } finally {
+      setIsGeneratingQuote(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -96,6 +114,17 @@ export function RFQDetailPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {isEstimator && rfq.parts && rfq.parts.length > 0 && (
+              <button
+                onClick={handleGenerateQuotation}
+                disabled={isGeneratingQuote}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-md shadow-sm transition disabled:opacity-50"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                <span>{isGeneratingQuote ? 'Locking Rates & Quoting...' : 'Generate Quotation'}</span>
+              </button>
+            )}
+
             {isEstimator && (
               <button
                 onClick={() => setIsAddPartModalOpen(true)}
