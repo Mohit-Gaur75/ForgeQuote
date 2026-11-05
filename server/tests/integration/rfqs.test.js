@@ -138,4 +138,17 @@ describe('RFQ API Integration Tests (/api/v1/rfqs)', () => {
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('FORBIDDEN');
   });
+
+  it('GET /api/v1/rfqs/:id/export-excel - streams a valid Excel workbook (.xlsx)', async () => {
+    const res = await request(app)
+      .get(`/api/v1/rfqs/${seededRfqId}/export-excel`)
+      .set('Cookie', estimatorCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    expect(res.headers['content-disposition']).toContain('attachment; filename=');
+    expect(res.body).toBeDefined();
+  });
 });

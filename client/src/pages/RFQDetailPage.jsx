@@ -12,6 +12,8 @@ import {
   Package,
   Layers,
   ArrowRight,
+  History,
+  Download,
 } from 'lucide-react';
 import { useRFQ } from '../hooks/useRFQs';
 import { useAuth } from '../hooks/useAuth';
@@ -19,6 +21,7 @@ import { RFQStatusBadge } from '../components/rfq/RFQStatusBadge';
 import { PartsTable } from '../components/parts/PartsTable';
 import { AddPartModal } from '../components/parts/AddPartModal';
 import { AIIntakeModal } from '../components/ai/AIIntakeModal';
+import { AuditTrailDrawer } from '../components/common/AuditTrailDrawer';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
 import { ErrorState } from '../components/common/ErrorState';
 import { formatLakhCrore } from '../utils/currency';
@@ -30,6 +33,7 @@ export function RFQDetailPage() {
   const { isEstimator } = useAuth();
   const [isAddPartModalOpen, setIsAddPartModalOpen] = useState(false);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
 
   const { data: rfq, isLoading, isError, error, refetch } = useRFQ(id);
   const createQuoteMutation = useCreateQuotation(id);
@@ -114,6 +118,26 @@ export function RFQDetailPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAuditDrawerOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md shadow-sm transition"
+              title="View immutable audit trail"
+            >
+              <History className="w-3.5 h-3.5 text-slate-500" />
+              <span>Audit Trail</span>
+            </button>
+
+            <a
+              href={`/api/v1/rfqs/${rfq.id}/export-excel`}
+              download={`${rfq.rfqNumber}-BOM.xlsx`}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md shadow-sm transition"
+              title="Export Bill of Materials to Excel (.xlsx)"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Export BOM (.xlsx)</span>
+            </a>
+
             {isEstimator && rfq.parts && rfq.parts.length > 0 && (
               <button
                 onClick={handleGenerateQuotation}
@@ -256,6 +280,15 @@ export function RFQDetailPage() {
         onClose={() => setIsAIModalOpen(false)}
         rfqId={rfq.id}
         onConfirmed={refetch}
+      />
+
+      {/* Audit Trail Drawer */}
+      <AuditTrailDrawer
+        isOpen={isAuditDrawerOpen}
+        onClose={() => setIsAuditDrawerOpen(false)}
+        entityType="RFQ"
+        entityId={rfq.id}
+        title={`Audit Trail — ${rfq.rfqNumber}`}
       />
     </div>
   );

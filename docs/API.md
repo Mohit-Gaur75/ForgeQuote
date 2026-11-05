@@ -170,6 +170,11 @@ All error 4xx and 5xx responses return a consistent JSON wrapper:
 }
 ```
 
+### 3.6 Export RFQ Bill of Materials to Excel (.xlsx)
+* **Method & Route**: `GET /rfqs/:id/export-excel`
+* **Access**: Authenticated
+* **Response**: Binary Excel file (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`) containing multi-sheet BOM and manufacturing routing tables generated via ExcelJS.
+
 ---
 
 ## 4. AI Intake Endpoints (`/rfqs/:id/extract`)

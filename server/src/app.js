@@ -22,6 +22,7 @@ import quotationRoutes from './modules/quotations/quotation.routes.js';
 import approvalRoutes from './modules/approvals/approval.routes.js';
 import routingsRoutes from './modules/routings/routings.routes.js';
 import historyRoutes from './modules/history/history.routes.js';
+import auditRoutes from './modules/audit/audit.routes.js';
 
 const app = express();
 
@@ -94,6 +95,7 @@ app.use('/api/v1/quotations', quotationRoutes);
 app.use('/api/v1/approvals', approvalRoutes);
 app.use('/api/v1/parts', routingsRoutes);
 app.use('/api/v1/history', historyRoutes);
+app.use('/api/v1/audit', auditRoutes);
 
 // Catch-all for undefined routes
 app.use((req, res, next) => {

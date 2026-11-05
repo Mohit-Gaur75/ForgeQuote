@@ -1,5 +1,6 @@
 // server/src/modules/rfqs/rfqs.controller.js
 import * as rfqService from './rfqs.service.js';
+import { generateRFQExcel } from '../excel/excel.service.js';
 
 export async function listRFQs(req, res) {
   const result = await rfqService.listRFQs(req.user, req.query);
@@ -46,4 +47,18 @@ export async function updateRFQStatus(req, res) {
     data: rfq,
     requestId: req.id,
   });
+}
+
+export async function exportRFQExcel(req, res) {
+  const workbook = await generateRFQExcel(req.params.id);
+  res.setHeader(
+    'Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  );
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="RFQ-${req.params.id.slice(0, 8)}-BOM.xlsx"`
+  );
+  await workbook.xlsx.write(res);
+  res.end();
 }

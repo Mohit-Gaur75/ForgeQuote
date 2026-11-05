@@ -9,12 +9,18 @@ const router = Router();
 
 router.use(authenticate);
 
-// Get deterministic routing suggestions for a part
+// Get deterministic routing suggestions for a part (supports both GET and POST)
 router.get('/:id/routing-suggestions', asyncHandler(routingController.getSuggestions));
+router.post('/:id/routing-suggestions', asyncHandler(routingController.getSuggestions));
 
-// Clone / apply routing from a historical part
+// Clone / apply routing from a historical part (supports both endpoints)
 router.post(
   '/:id/apply-routing',
+  requireRole('ESTIMATOR'),
+  asyncHandler(routingController.applySuggestion)
+);
+router.post(
+  '/:id/apply-routing-suggestion',
   requireRole('ESTIMATOR'),
   asyncHandler(routingController.applySuggestion)
 );

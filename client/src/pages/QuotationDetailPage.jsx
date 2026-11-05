@@ -17,10 +17,12 @@ import {
   ChevronUp,
   Award,
   Sparkles,
+  History,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useQuotation } from '../hooks/useQuotations';
 import { SendQuotationModal } from '../components/quotations/SendQuotationModal';
+import { AuditTrailDrawer } from '../components/common/AuditTrailDrawer';
 import { formatCurrency, formatLakhCrore } from '../utils/currency';
 
 export function QuotationDetailPage() {
@@ -31,6 +33,7 @@ export function QuotationDetailPage() {
   const { data: quotation, isLoading, isError, error, refetch } = useQuotation(id);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
   const [isSnapshotExpanded, setIsSnapshotExpanded] = useState(false);
+  const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
   const [sentSuccessMsg, setSentSuccessMsg] = useState('');
 
   if (isLoading) {
@@ -128,6 +131,16 @@ export function QuotationDetailPage() {
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>RFQ Dossier</span>
+          </button>
+
+          {/* Audit Trail Button */}
+          <button
+            onClick={() => setIsAuditDrawerOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+            title="Inspect immutable audit trail"
+          >
+            <History className="w-3.5 h-3.5 text-slate-500" />
+            <span>Audit Trail</span>
           </button>
 
           {/* Download PDF Button */}
@@ -477,6 +490,15 @@ export function QuotationDetailPage() {
           );
           refetch();
         }}
+      />
+
+      {/* Audit Trail Drawer */}
+      <AuditTrailDrawer
+        isOpen={isAuditDrawerOpen}
+        onClose={() => setIsAuditDrawerOpen(false)}
+        entityType="QUOTATION"
+        entityId={quotation.id}
+        title={`Audit Trail — ${quotation.quotationNumber}`}
       />
     </div>
   );

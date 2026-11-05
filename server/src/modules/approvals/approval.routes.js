@@ -13,6 +13,7 @@ router.use(authenticate);
 router.use(requireRole('SALES_HEAD'));
 
 router.get('/', asyncHandler(approvalController.listPendingApprovals));
+router.get('/pending', asyncHandler(approvalController.listPendingApprovals));
 router.post(
   '/:id/decision',
   validate(approvalDecisionSchema),

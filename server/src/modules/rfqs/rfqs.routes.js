@@ -38,6 +38,12 @@ router.get(
   asyncHandler(rfqController.getRFQ)
 );
 
+// Stream Bill of Materials & Routing Excel Workbook
+router.get(
+  '/:id/export-excel',
+  asyncHandler(rfqController.exportRFQExcel)
+);
+
 router.patch(
   '/:id',
   requireRole('ESTIMATOR'),

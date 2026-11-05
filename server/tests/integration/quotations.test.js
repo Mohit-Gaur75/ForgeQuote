@@ -32,13 +32,36 @@ describe('Quotations & Commercial Approvals Integration Tests', () => {
 
     // Find an RFQ owned by estimator with parts
     rfq = await prisma.rFQ.findFirst({
-      where: { ownerId: estimatorUser.id },
+      where: {
+        ownerId: estimatorUser.id,
+        parts: { some: {} },
+      },
       include: {
         parts: {
           include: { operations: true },
         },
       },
     });
+
+    if (!rfq) {
+      rfq = await prisma.rFQ.findFirst({
+        where: { ownerId: estimatorUser.id },
+        include: { parts: { include: { operations: true } } },
+      });
+      const newPart = await prisma.part.create({
+        data: {
+          rfqId: rfq.id,
+          partNumber: 'TEST-PART-AUTO',
+          partName: 'Automated Test Spindle',
+          material: 'EN8',
+          netWeightKg: 1.25,
+          grossWeightKg: 1.32,
+          scrapPercentage: 5.0,
+          annualVolume: 100000,
+        },
+      });
+      rfq.parts = [newPart];
+    }
 
     // Ensure the first part has operations
     const part = rfq.parts[0];
@@ -63,6 +86,7 @@ describe('Quotations & Commercial Approvals Integration Tests', () => {
       data: {
         annualVolume: 100000,
         netWeightKg: 1.25,
+        grossWeightKg: 1.32,
         scrapPercentage: 5.0,
       },
     });
