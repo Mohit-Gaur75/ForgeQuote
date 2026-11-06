@@ -11,6 +11,7 @@
     "migrate:dev": "prisma migrate dev",
     "generate": "prisma generate",
     "seed": "node --env-file=../.env prisma/seed.js",
+    "seed:quotes": "node --env-file=../.env prisma/import-historical-quotes.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

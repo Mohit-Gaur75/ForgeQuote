@@ -96,4 +96,35 @@ describe('Historical Parts & Deterministic Routing API Tests', () => {
     });
     expect(updatedTarget.operations.length).toBe(sourcePart.operations.length);
   });
+
+  it('GET /api/v1/history/template-excel - streams blank Excel import template', async () => {
+    const res = await request(app)
+      .get('/api/v1/history/template-excel')
+      .set('Cookie', estimatorCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe(
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    expect(res.headers['content-disposition']).toContain('attachment; filename=');
+  });
+
+  it('POST /api/v1/history/import-excel - successfully imports sample historical quotes into database', async () => {
+    // Generate a mini sample buffer of 5 historical rows for fast testing
+    const { buildHistoricalWorkbook } = await import('../../src/modules/excel/historical-data-generator.js');
+    const workbook = buildHistoricalWorkbook(5);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+
+    const res = await request(app)
+      .post('/api/v1/history/import-excel')
+      .set('Cookie', estimatorCookie)
+      .send({
+        fileBase64: base64,
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.importedCount).toBe(5);
+  });
 });

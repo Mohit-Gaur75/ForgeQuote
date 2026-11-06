@@ -1,14 +1,38 @@
 // server/src/config/env.js
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Ensure .env is loaded regardless of process launch directory
+const candidateEnvPaths = [
+  path.resolve(__dirname, '../../../.env'),
+  path.resolve(__dirname, '../../.env'),
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+];
+
+for (const envPath of candidateEnvPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+    break;
+  }
+}
 
 // Auto-detect host vs Docker environment:
-// If running on host (outside container) and DATABASE_URL uses the container hostname 'postgres:5432',
+// If running on host (outside container, or on Windows) and DATABASE_URL uses container hostname 'postgres',
 // transparently rewrite to 'localhost:5432' so local Node processes connect seamlessly.
-if (!fs.existsSync('/.dockerenv') && process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@postgres:5432')) {
-  process.env.DATABASE_URL = process.env.DATABASE_URL.replace('@postgres:5432', '@localhost:5432');
+const isHostEnvironment = process.platform === 'win32' || !fs.existsSync('/.dockerenv');
+if (isHostEnvironment && process.env.DATABASE_URL) {
+  if (process.env.DATABASE_URL.includes('@postgres:5432')) {
+    process.env.DATABASE_URL = process.env.DATABASE_URL.replace('@postgres:5432', '@localhost:5432');
+  } else if (process.env.DATABASE_URL.includes('@postgres/')) {
+    process.env.DATABASE_URL = process.env.DATABASE_URL.replace('@postgres/', '@localhost:5432/');
+  }
 }
 
 const envSchema = z.object({

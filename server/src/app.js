@@ -40,9 +40,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
 }));
 
-// Body & Cookie Parsers
-app.use(express.json({ limit: '100kb' }));
-app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+// Body & Cookie Parsers (supports bulk Excel import payloads)
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(cookieParser());
 
 // Request tracking & logging

@@ -12,9 +12,11 @@ import {
   Package,
   Calendar,
   ExternalLink,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useHistorySearch } from '../hooks/useHistory';
 import { HistoricalRoutingModal } from '../components/history/HistoricalRoutingModal';
+import { ImportQuotesModal } from '../components/history/ImportQuotesModal';
 import { formatCurrency, formatLakhCrore } from '../utils/currency';
 
 const MATERIALS = ['ALL', 'EN8', '40Cr4', '20MnCr5', 'SS304', 'EN19', 'C45'];
@@ -31,8 +33,9 @@ export function HistoryPage() {
   const [page, setPage] = useState(1);
 
   const [inspectingPart, setInspectingPart] = useState(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-  const { data: historyResponse, isLoading, isError, error } = useHistorySearch({
+  const { data: historyResponse, isLoading, isError, error, refetch } = useHistorySearch({
     q,
     material,
     minWeight,
@@ -62,18 +65,30 @@ export function HistoryPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-            Historical Parts & Quotation Archive
-          </h1>
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-white uppercase">
-            Estimation Intelligence
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              Historical Parts & Quotation Archive
+            </h1>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-white uppercase">
+              Estimation Intelligence
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Search previous manufacturing parts, cycle times, machine routings, and past quotation benchmarks.
+          </p>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
-          Search previous manufacturing parts, cycle times, machine routings, and past quotation benchmarks.
-        </p>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsImportModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm transition"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Import Past Quotes (.xlsx)</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Filter & Search Card */}
@@ -323,6 +338,13 @@ export function HistoryPage() {
         isOpen={Boolean(inspectingPart)}
         onClose={() => setInspectingPart(null)}
         part={inspectingPart}
+      />
+
+      {/* Excel Past Quotes Import Modal */}
+      <ImportQuotesModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportSuccess={() => refetch()}
       />
     </div>
   );
