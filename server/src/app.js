@@ -32,9 +32,19 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
 }));
 
-// CORS allowlist
+// CORS allowlist supporting single or comma-separated origins
+const rawOrigins = (env.CORS_ORIGIN || '').split(',').map((s) => s.trim()).filter(Boolean);
+const defaultOrigins = ['http://localhost:5173', 'http://localhost:8080', 'http://localhost'];
+const allowedOrigins = Array.from(new Set([...rawOrigins, ...defaultOrigins]));
+
 app.use(cors({
-  origin: env.CORS_ORIGIN,
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. curl, docker healthcheck, postman)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
@@ -44,6 +54,20 @@ app.use(cors({
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(cookieParser());
+
+// Health Check Endpoint (Required for Docker & Cloud Platforms — placed before rate limiting)
+app.get('/api/v1/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: {
+      status: 'healthy',
+      service: 'forgequote-api',
+      environment: env.NODE_ENV,
+      timestamp: new Date().toISOString(),
+    },
+    requestId: req.id,
+  });
+});
 
 // Request tracking & logging
 app.use(requestId);
@@ -69,20 +93,6 @@ const globalLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/', globalLimiter);
-
-// Health Check Endpoint (Required for Docker & Cloud Platforms)
-app.get('/api/v1/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    data: {
-      status: 'healthy',
-      service: 'forgequote-api',
-      environment: env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-    },
-    requestId: req.id,
-  });
-});
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);

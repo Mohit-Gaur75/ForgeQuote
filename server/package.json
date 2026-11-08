@@ -5,13 +5,13 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch --env-file=../.env src/server.js",
+    "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
     "generate": "prisma generate",
-    "seed": "node --env-file=../.env prisma/seed.js",
-    "seed:quotes": "node --env-file=../.env prisma/import-historical-quotes.js",
+    "seed": "node prisma/seed.js",
+    "seed:quotes": "node prisma/import-historical-quotes.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },

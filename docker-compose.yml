@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-forgequote}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_strong_password}
       POSTGRES_DB: ${POSTGRES_DB:-forgequote}
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -34,11 +34,11 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgresql://${POSTGRES_USER:-forgequote}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-forgequote}?schema=public
+      DATABASE_URL: postgresql://${POSTGRES_USER:-forgequote}:${POSTGRES_PASSWORD:-changeme_strong_password}@postgres:5432/${POSTGRES_DB:-forgequote}?schema=public
       SESSION_SECRET: ${SESSION_SECRET:-dev_secret_change_in_production_32chars}
       SESSION_EXPIRY_HOURS: ${SESSION_EXPIRY_HOURS:-24}
       COOKIE_SECURE: "false"
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173,http://localhost:8080}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       PORT: 4000
@@ -69,7 +69,8 @@ services:
     container_name: forgequote_client
     restart: unless-stopped
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     environment:
       VITE_API_URL: http://localhost:4000
     volumes:

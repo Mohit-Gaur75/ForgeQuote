@@ -1,4 +1,5 @@
 // server/prisma/seed.js
+import '../src/config/env.js';
 import { PrismaClient } from '@prisma/client';
 import argon2 from 'argon2';
 

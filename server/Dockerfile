@@ -13,7 +13,7 @@ COPY src ./src
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node prisma/seed.js && node src/server.js"]
 
 # ── Production Stage ──
 FROM node:24-alpine AS production
@@ -22,10 +22,10 @@ WORKDIR /app
 
 RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
 
-COPY package*.json ./
+COPY --chown=nodeuser:nodejs package*.json ./
 RUN npm ci --omit=dev
 
-COPY prisma ./prisma
+COPY --chown=nodeuser:nodejs prisma ./prisma
 RUN npx prisma generate
 
 COPY --chown=nodeuser:nodejs src ./src
@@ -34,4 +34,4 @@ USER nodeuser
 
 EXPOSE 4000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node prisma/seed.js && node src/server.js"]
