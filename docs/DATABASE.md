@@ -93,6 +93,8 @@ erDiagram
         uuid owner_id FK
         varchar status
         text lost_reason
+        timestamp deal_signed_at
+        varchar deal_signed_by
         timestamp created_at
         timestamp updated_at
     }
@@ -108,6 +110,10 @@ erDiagram
         decimal scrap_percentage
         integer annual_volume
         decimal setup_hours
+        varchar routing_status
+        varchar routing_verified_by
+        timestamp routing_verified_at
+        text routing_notes
         timestamp created_at
         timestamp updated_at
     }
@@ -158,6 +164,10 @@ erDiagram
         varchar calculation_version
         uuid created_by FK
         uuid approved_by FK
+        varchar md_signed_by
+        timestamp md_signed_at
+        varchar md_signature_hash
+        text md_deal_notes
         timestamp created_at
         timestamp updated_at
     }
@@ -270,10 +280,12 @@ To guarantee sub-100ms response times across an RFQ register of thousands of par
 | `parts` | `rfq_id` | B-Tree | Cascaded retrieval of parts for an RFQ |
 | `parts` | `part_name` | B-Tree | Similarity engine token matching |
 | `parts` | `material` | B-Tree | Exact material match for routing suggestions |
+| `parts` | `routing_status` | B-Tree | Plant Head routing feasibility filter (`PENDING_REVIEW`, `VERIFIED`) |
 | `rate_masters` | `(rate_type, effective_from)` | Composite B-Tree | Accelerated time-travel rate resolution queries |
 | `rate_masters` | `(rate_name, rate_type)` | Composite B-Tree | Fast lookup of version histories for a rate item |
 | `quotations` | `quotation_number` | B-Tree (UNIQUE) | Direct quotation reference lookup |
 | `quotations` | `status` | B-Tree | Approval inbox queue (`PENDING_APPROVAL`) |
+| `quotations` | `md_signed_at` | B-Tree | Managing Director deal room signing pipeline |
 | `quotations` | `rfq_id` | B-Tree | Retrieving quote revisions for an RFQ |
 | `audit_logs` | `(entity_type, entity_id)` | Composite B-Tree | Retrieving entity-specific audit history |
 | `sessions` | `token_hash` | B-Tree (UNIQUE) | Fast O(1) session authentication on every request |

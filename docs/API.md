@@ -282,11 +282,11 @@ All error 4xx and 5xx responses return a consistent JSON wrapper:
 
 ---
 
-## 6. Routing Suggestions (`/parts/:id/routing-suggestions`)
+## 6. Routing Suggestions & Plant Head Clearance (`/parts`, `/routings`)
 
 ### 6.1 Get Similarity Suggestions
-* **Method & Route**: `POST /parts/:id/routing-suggestions`
-* **Access**: `ESTIMATOR`
+* **Method & Route**: `POST /parts/:id/routing-suggestions` (or `GET`)
+* **Access**: `ESTIMATOR`, `PLANT_HEAD`
 * **Description**: Compares target part against historical database parts using the deterministic formula:
   $$\text{Score} = 0.35M + 0.25N + 0.20W + 0.10C + 0.10O$$
 * **Response (200 OK)**: Top 3 matching historical parts with similarity scores and operational sequences.
@@ -300,6 +300,25 @@ All error 4xx and 5xx responses return a consistent JSON wrapper:
   "sourcePartId": "a90892f3-1824-4f9d-83b3-f09b537c3581"
 }
 ```
+
+### 6.3 List Routing Checks for Plant Head Clearance
+* **Method & Route**: `GET /routings/checks`
+* **Access**: Authenticated (`PLANT_HEAD`, `ESTIMATOR`, `SALES_HEAD`, `MANAGING_DIRECTOR`)
+* **Description**: Returns all parts across active RFQs with their current operational routings, total cycle times, machine types, and routing clearance status (`PENDING_REVIEW`, `VERIFIED`, `REVISION_REQUIRED`).
+* **Response (200 OK)**: Array of parts with attached operational routings and verification metadata.
+
+### 6.4 Plant Head Routing Feasibility Sign-off
+* **Method & Route**: `POST /parts/:id/routing-signoff`
+* **Access**: `PLANT_HEAD`, `SALES_HEAD`, `MANAGING_DIRECTOR`
+* **Description**: Logs operational manufacturing clearance on a part's routing, checking CNC/VMC bay availability, tooling clearance, and cycle time feasibility.
+* **Request Body**:
+```json
+{
+  "status": "VERIFIED",
+  "notes": "HMC bay cell 3 capacity cleared. Cycle times and fixture setup times verified feasible."
+}
+```
+* **Response (200 OK)**: Updated part record with `routingStatus: "VERIFIED"`, `routingVerifiedBy`, and `routingVerifiedAt`.
 
 ---
 
@@ -433,16 +452,41 @@ All error 4xx and 5xx responses return a consistent JSON wrapper:
 * **Access**: `SALES_HEAD`
 * **Description**: Marks quotation as `SENT`. Clearly logged and documented as a simulation.
 
+### 9.8 List Qualified Quotations for Managing Director Deal Room
+* **Method & Route**: `GET /quotations/deal-room/list`
+* **Access**: Authenticated (`MANAGING_DIRECTOR`, `SALES_HEAD`)
+* **Description**: Returns all quotations in `READY_TO_SEND` or `SENT` status, calculating annual contract values (ACV) and highlighting deals awaiting MD executive countersignature.
+* **Response (200 OK)**: Array of quotations with customer details, part breakdown, ACV, and MD deal signing status.
+
+### 9.9 Managing Director Deal Closure & Digital Seal Sign-off
+* **Method & Route**: `POST /quotations/:id/sign-deal`
+* **Access**: `MANAGING_DIRECTOR` (or `SALES_HEAD`)
+* **Description**: Executive deal closure. Generates a cryptographic SHA-256 digital deal seal (`mdSignatureHash`), records signatory timestamp, and transitions the RFQ to `WON` status.
+* **Request Body**:
+```json
+{
+  "notes": "Executive sign-off granted. Long-term supply agreement sealed for Pune manufacturing plant."
+}
+```
+* **Response (200 OK)**: Quotation record with `mdSignedBy`, `mdSignedAt`, `mdSignatureHash`, and updated RFQ status `WON`.
+
 ---
 
-## 10. Historical Search & Audit Endpoints
+## 10. Historical Search, Excel Import & Audit Endpoints
 
 ### 10.1 Search Historical Quotations
 * **Method & Route**: `GET /history/search`
 * **Access**: Authenticated
 * **Query Parameters**: `partName`, `material`, `customerName`, `minWeight`, `maxWeight`, `dateFrom`, `dateTo`
 
-### 10.2 Get Entity Audit Trail
+### 10.2 Import Past Quotes from Excel (.xlsx)
+* **Method & Route**: `POST /history/import-excel`
+* **Access**: `SALES_HEAD`, `ESTIMATOR`
+* **Payload**: Multipart form upload (`file` parameter, `.xlsx` format)
+* **Description**: Parses up to 1,400+ historical quotation rows, matching columns for RFQ No, Customer, Part Name, Material, Gross/Net Weight, Annual Volume, Cycle Time, and Machine Hour Rate. Ingests idempotent records into historical quotation database.
+* **Response (200 OK)**: Ingestion summary with total imported rows, matched parts, and database IDs.
+
+### 10.3 Get Entity Audit Trail
 * **Method & Route**: `GET /audit/:entityType/:entityId`
 * **Access**: `SALES_HEAD`
 * **Response (200 OK)**: Full change history with user IDs, timestamps, old values, and new values.

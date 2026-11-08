@@ -158,12 +158,32 @@ ForgeQuote System Architecture
                          If Annual Value ≤ ₹25 Lakh ➔ READY_TO_SEND
 ```
 
-### 3.2 Journey 2: Sales Head Commercial Approval Workflow
+### 3.2 Journey 2: Plant Head Routing Feasibility Workflow ("Checks Routings")
+```
+[Login as Plant Head]
+        │
+        ▼
+[Routing Checks Screen (/routing-checks)] ── Lists parts across active RFQs
+        │
+        ▼
+[Inspect Operations] ── Review CNC/VMC bays, cycle times, fixture setup hours, machines
+        │
+   ┌────┴───────────────────────────┐
+   ▼                                ▼
+[Verify Feasibility]            [Request Revision]
+Verifies machine bay capacity   Flags bottleneck cycle time or tooling gap
+Status ➔ VERIFIED               Status ➔ REVISION_REQUIRED
+        │                               │
+        ▼                               ▼
+[Cleared for Production]        [Estimator revises routing parameters]
+```
+
+### 3.3 Journey 3: Sales Head Commercial Approval Workflow ("Approves and Sends")
 ```
 [Login as Sales Head]
         │
         ▼
-[Approval Inbox] ── Filtered list of Quotations in PENDING_APPROVAL state
+[Approval Inbox] ── Filtered list of Quotations in PENDING_APPROVAL state (> ₹25L ACV)
         │
         ▼
 [Review Quotation] ── Inspect Part Cost Breakdown, Margin (%), Volume Tiers, Rate Snapshots
@@ -178,6 +198,23 @@ Status ➔ APPROVED               Status ➔ REJECTED
 [Simulate Send to Customer]     [Estimator Notified to Revise]
 Status ➔ SENT
 Download Official PDF
+```
+
+### 3.4 Journey 4: Managing Director Executive Deal Closure ("Signs the Deal")
+```
+[Login as Managing Director]
+        │
+        ▼
+[Executive Deal Room (/deal-room)] ── Qualified quotation pipeline with Annual Contract Values
+        │
+        ▼
+[Review Commercial Offer] ── High-value OEM terms, volume pricing, manufacturing margins
+        │
+        ▼
+[Sign Deal as MD] ── Applies SHA-256 digital contract seal (mdSignatureHash)
+        │
+        ▼
+[Deal Won & Countersigned] ── Transitions RFQ to WON, prints executive 3-box signature block on PDF
 ```
 
 ---
@@ -229,18 +266,22 @@ Download Official PDF
 * Expiry: 24-hour absolute expiry; updated `lastActivityAt` on valid requests.
 
 ### 5.2 Role-Based Access Control (RBAC)
-| Action | ESTIMATOR | SALES_HEAD | Enforcement Point |
-|---|---|---|---|
-| View Owned RFQs | Yes | Yes | DB query filter (`ownerId`) |
-| View All RFQs | No | Yes | Service Layer Guard |
-| Create / Update RFQ | Yes | No | Route Middleware (`requireRole`) |
-| Execute AI Extraction | Yes | No | Route Middleware (`requireRole`) |
-| Edit Part & Costing | Yes | No | Route Middleware (`requireRole`) |
-| Create Quotation | Yes | No | Route Middleware (`requireRole`) |
-| Manage Rate Masters | Read Only | Create / Update | Route Middleware (`requireRole`) |
-| Access Approval Inbox | No | Yes | Route Middleware (`requireRole`) |
-| Approve / Reject Quote | No | Yes | Service Layer + Anti-Self-Approval |
-| Mark RFQ Won / Lost | No | Yes | Route Middleware (`requireRole`) |
+| Action | ESTIMATOR | PLANT_HEAD | SALES_HEAD | MANAGING_DIRECTOR | Enforcement Point |
+|---|:---:|:---:|:---:|:---:|---|
+| View Owned RFQs | Yes | Yes | Yes | Yes | DB query filter (`ownerId`) |
+| View All RFQs | No | Yes | Yes | Yes | Service Layer Guard |
+| Create / Update RFQ | Yes | No | Yes | Yes | Route Middleware (`requireRole`) |
+| Execute AI Extraction | Yes | No | Yes | No | Route Middleware (`requireRole`) |
+| Edit Part & Costing | Yes | No | No | No | Route Middleware (`requireRole`) |
+| Inspect Routing Checks | Yes | Yes | Yes | Yes | Route Middleware (`requireRole`) |
+| Sign-off Routing Feasibility | No | Yes | No | No | Route Middleware (`requireRole`) |
+| Create Quotation | Yes | No | No | No | Route Middleware (`requireRole`) |
+| Manage Rate Masters | Read Only | Read Only | Create / Update | Create / Update | Route Middleware (`requireRole`) |
+| Access Approval Inbox | No | No | Yes | No | Route Middleware (`requireRole`) |
+| Approve / Reject Quote (> ₹25L) | No | No | Yes | No | Service Layer + Anti-Self-Approval |
+| Access Executive Deal Room | No | No | Yes | Yes | Route Middleware (`requireRole`) |
+| Sign Deal as MD (Digital Seal) | No | No | No | Yes | Route Middleware (`requireRole`) |
+| Mark RFQ Won / Lost | No | No | Yes | Yes | Route Middleware (`requireRole`) |
 
 ### 5.3 Audit Trail Design
 Every state-changing mutation triggers an atomic write to `AuditLog`:

@@ -79,16 +79,18 @@ flowchart TD
 
 ---
 
-## 4. The 8 Desktop-First Screens
+## 4. The 10 Desktop-First Manufacturing Screens
 
-1. **Screen 1 — Login**: Secure credential entry, Argon2id verification, HTTP-only session cookie issuance, demo account selector.
-2. **Screen 2 — Dashboard / RFQ Register**: Filterable, searchable register with overdue indicators, annual contract values, and owner filtering.
+1. **Screen 1 — Login**: Secure credential entry, Argon2id verification, HTTP-only session cookie issuance, 4-card interactive demo persona selector.
+2. **Screen 2 — Dashboard / RFQ Register**: Filterable, searchable register with due dates, overdue indicators, annual contract values, and owner filtering.
 3. **Screen 3 — RFQ Detail & AI Intake**: Split workspace for pasting customer inquiry emails/BOMs, running AI extraction, viewing confidence ratings and source excerpts, and verifying fields.
 4. **Screen 4 — Part Costing Workspace**: Core engineering workspace featuring raw material weights, routing operations, cycle times, setup amortisation, and 3 volume tiers (50%, 100%, 150%) calculated side by side.
-5. **Screen 5 — Rate Master Management**: Centralized rate registers (Material, Machine Hour, Overhead, Packing, Freight, GST) with version histories and overlap prevention.
+5. **Screen 5 — Rate Master Management**: Centralized rate registers (Material, Machine Hour, Overhead, Packing, Freight, GST) with version histories, point-in-time time-travel queries, and overlap prevention.
 6. **Screen 6 — Commercial Approval Inbox**: Sales Head inbox displaying pending quotations exceeding ₹25,00,000 with cost breakdowns and 1-click Approve/Reject actions.
-7. **Screen 7 — Quotation Details & PDF**: Immutable quotation view displaying frozen rate snapshots, approval history, simulated customer sending, and direct PDF generation.
-8. **Screen 8 — Historical Quotation Search**: Deep multi-criteria search by part name, material grade, customer, and weight range to guide new estimations.
+7. **Screen 7 — Quotation Details & PDF**: Immutable quotation view displaying frozen rate snapshots, approval history, simulated customer sending, and direct PDF generation with 3-box executive governance signatures.
+8. **Screen 8 — Historical Quotation Search & Excel Import**: Deep multi-criteria search by part name, material grade, customer, and weight range, plus bulk Excel import for 1,400+ historical parts.
+9. **Screen 9 — Routing Feasibility & Plant Checks (`/routing-checks`)**: Plant Head operational clearance dashboard to verify machine bay capability, setup times, cycle times, and log sign-off verdicts (`VERIFIED` / `REVISION_REQUIRED`).
+10. **Screen 10 — Executive Deal Room (`/deal-room`)**: Managing Director executive dashboard displaying qualified deals, annual contract values, digital contract execution seal, and final deal closure sign-off.
 
 ---
 
@@ -157,12 +159,14 @@ docker compose -f docker-compose.prod.yml exec server node prisma/seed.js
 
 ---
 
-### 6.2 Pre-Configured Demonstration Accounts
+### 6.2 Pre-Configured Demonstration Accounts (All 4 Personas)
 
-| Role | Email Address | Password | Permissions |
-|---|---|---|---|
-| **Estimator** | `estimator@forgequote.demo` | `Estimator@123` | Create RFQs, run AI extraction, configure part routings, calculate costs, submit quotations. |
-| **Sales Head** | `sales@forgequote.demo` | `Sales@123` | Review approval inbox, approve/reject quotations, manage master rates, simulate customer sending, view audit logs. |
+| Role | Problem Statement Mandate | Email Address | Password | Key Capabilities & Primary Workspace |
+|---|---|---|---|---|
+| **Estimator** | *"Costs each part in a large Excel template: material, routing, cycle times, hour rates..."* | `estimator@forgequote.demo` | `Estimator@123` | Create RFQs, run AI intake, configure operational routings, calculate 3 volume tiers, submit quotations. |
+| **Plant Head** | *"Checks routings"* | `planthead@forgequote.demo` | `PlantHead@123` | Feasibility clearance dashboard (`/routing-checks`), validates CNC/VMC bay allocation, machine cycle times, records sign-off verdicts (`VERIFIED` / `REVISION_REQUIRED`). |
+| **Sales Head** | *"Approves and sends"* | `sales@forgequote.demo` | `Sales@123` | Commercial approval inbox (`/approvals`), approves quotes > ₹25L ACV, manages master rate versions, dispatches formal quotes to OEMs. |
+| **Managing Director** | *"Signs the deal"* | `md@forgequote.demo` | `MD@123` | Executive deal room (`/deal-room`), monitors high-value contract pipeline, applies SHA-256 digital deal seal, countersigns 3-box formal quotation PDF. |
 
 ---
 
@@ -209,18 +213,20 @@ Every requirement specified in the master architecture specification has been im
 | 21 | **₹25 lakh approval rule works** | If 100% volume annual contract value $\ge ₹25,00,000$, transitions to `PENDING_APPROVAL`; else `READY_TO_SEND`. | ✅ Passed |
 | 22 | **Sales head can approve and reject** | `POST /quotations/:id/approve` and `POST /quotations/:id/reject` with decision comment and timestamp. | ✅ Passed |
 | 23 | **Rejected quotations cannot be sent** | `POST /quotations/:id/send` validates approved/ready status; rejected quotes return HTTP 400. | ✅ Passed |
-| 24 | **PDF generation works** | PDFKit engine generates formal multi-page industrial quotation with letterhead, parts, tiers, and signatories. | ✅ Passed |
+| 24 | **PDF generation with 3-box executive sign-off** | PDFKit engine generates formal multi-page industrial quotation with letterhead, parts, tiers, and 3-box signatories (Prepared by Estimator, Approved by Sales Head, Sealed & Signed by Managing Director). | ✅ Passed |
 | 25 | **GST is displayed separately** | Pre-GST price, 18% GST amount, and final inclusive price displayed distinctly across all screens and PDF. | ✅ Passed |
-| 26 | **Historical quotation search works** | Screen 8 `HistoryPage` with multi-field search (part, material, customer, weight range) and routing inspector. | ✅ Passed |
-| 27 | **Audit history is available** | `AuditLog` records created on all mutations with userId, action, entityType, entityId, and old/new JSON values. | ✅ Passed |
-| 28 | **Loading, empty and error states exist** | Spinners, skeletons, friendly empty states, and retry buttons across all 8 screens. | ✅ Passed |
-| 29 | **No dead buttons remain** | Every button, link, and modal triggers an action, mutation, or verified route. | ✅ Passed |
-| 30 | **Docker Compose starts the application** | `docker-compose.yml` (development) and `docker-compose.prod.yml` (production multi-stage) start full stack. | ✅ Passed |
-| 31 | **Database persists after container restart** | Named volume `pgdata` (`pgdata_prod`) mounts `/var/lib/postgresql/data`. | ✅ Passed |
-| 32 | **Frontend communicates with backend** | Reverse proxy / CORS allows seamless API communication across all 8 screens. | ✅ Passed |
-| 33 | **Backend communicates with PostgreSQL** | Prisma client successfully queries and mutates PostgreSQL on port 5432. | ✅ Passed |
-| 34 | **Critical automated tests pass** | 11 test suites, 60/60 unit and integration tests passing green. | ✅ Passed |
-| 35 | **Production builds succeed** | Client `vite build` completes in <8s; multi-stage production Docker containers build cleanly. | ✅ Passed |
+| 26 | **Historical quotation search & Excel import** | Screen 8 `HistoryPage` with multi-field search and bulk Excel import for 1,400+ past quotes with sample records. | ✅ Passed |
+| 27 | **Plant Head routing checks works** | Screen 9 `RoutingChecksPage` (`/routing-checks`) allows Plant Head to inspect machine feasibility and log sign-offs (`VERIFIED`/`REVISION_REQUIRED`). | ✅ Passed |
+| 28 | **Managing Director deal execution works** | Screen 10 `DealRoomPage` (`/deal-room`) enables MD to review high-value contracts, apply SHA-256 digital seal, and mark RFQ as WON. | ✅ Passed |
+| 29 | **Audit history is available** | `AuditLog` records created on all mutations with userId, action, entityType, entityId, and old/new JSON values. | ✅ Passed |
+| 30 | **Loading, empty and error states exist** | Spinners, skeletons, friendly empty states, and retry buttons across all 10 screens. | ✅ Passed |
+| 31 | **No dead buttons remain** | Every button, link, and modal triggers an action, mutation, or verified route. | ✅ Passed |
+| 32 | **Docker Compose starts the application** | `docker-compose.yml` (development) and `docker-compose.prod.yml` (production multi-stage) start full stack with health checks. | ✅ Passed |
+| 33 | **Database persists after container restart** | Named volume `pgdata` (`pgdata_prod`) mounts `/var/lib/postgresql/data`. | ✅ Passed |
+| 34 | **Frontend communicates with backend** | Reverse proxy / CORS allows seamless API communication across all 10 screens. | ✅ Passed |
+| 35 | **Backend communicates with PostgreSQL** | Prisma client successfully queries and mutates PostgreSQL on port 5432 with auto-host fallback. | ✅ Passed |
+| 36 | **Critical automated tests pass** | 12 test suites, 66/66 unit and integration tests passing green. | ✅ Passed |
+| 37 | **Production builds succeed** | Client `vite build` completes in <6s; multi-stage production Docker containers build cleanly. | ✅ Passed |
 | 36 | **TDD is complete** | `docs/TDD.md` complete with Pune context, engineering formulas, diagrams, and validation. | ✅ Passed |
 | 37 | **deployment.md is complete** | `docs/deployment.md` complete with local Docker, Neon, Render, Vercel, and SSL guidance. | ✅ Passed |
 

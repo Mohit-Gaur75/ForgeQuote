@@ -160,11 +160,31 @@ export async function approveQuotation(quotationId, approverUser, comment) {
 }
 ```
 
-### 4.3 Estimator Ownership Isolation
+### 4.3 Four-Role RBAC Privilege Matrix
+
+| Operation / Endpoint | Estimator | Plant Head | Sales Head | Managing Director |
+|---|:---:|:---:|:---:|:---:|
+| **Create & Edit RFQs** | ✅ | ❌ | ✅ | ✅ |
+| **Run AI Intake & Edit BOMs** | ✅ | ❌ | ✅ | ❌ |
+| **Configure Operational Routings** | ✅ | ❌ | ❌ | ❌ |
+| **Verify Machine Routings (`/routing-checks`)** | ❌ | ✅ | ✅ | ✅ |
+| **Sign-off Routing Feasibility (`/routing-signoff`)**| ❌ | ✅ | ❌ | ❌ |
+| **Execute Deterministic Costing** | ✅ | ❌ | ✅ | ❌ |
+| **Manage Master Rates & Versions** | ❌ | ❌ | ✅ | ✅ |
+| **Approve Quotations > ₹25L (`/approvals`)** | ❌ | ❌ | ✅ | ❌ |
+| **Simulated Customer Dispatch (`/send`)** | ❌ | ❌ | ✅ | ❌ |
+| **Access Executive Deal Room (`/deal-room`)** | ❌ | ❌ | ✅ | ✅ |
+| **Sign & Seal Contract Deal (`/sign-deal`)** | ❌ | ❌ | ❌ | ✅ |
+| **Download PDF Quotation** | ✅ | ✅ | ✅ | ✅ |
+| **View Audit Trail** | ❌ | ❌ | ✅ | ✅ |
+
+### 4.4 Estimator Ownership Isolation & Governance Rules
 * When an `ESTIMATOR` lists RFQs via `GET /rfqs`, the database query is automatically scoped:
   `WHERE owner_id = req.user.id`
 * An estimator attempting to read or edit another estimator's RFQ by guessing its UUID is rejected with HTTP 403 Forbidden.
-* The `SALES_HEAD` possesses global visibility across all organizational RFQs.
+* The `PLANT_HEAD` possesses plant-wide visibility to review and clear CNC/VMC machine operations across all RFQs without editing commercial financial margins.
+* The `SALES_HEAD` possesses global commercial visibility to approve quotations > ₹25 Lakh and dispatch quotes to OEM customers.
+* The `MANAGING_DIRECTOR` possesses executive deal closure authorization, digitally sealing won contracts and counter-signing the 3-box formal quotation document.
 
 ---
 

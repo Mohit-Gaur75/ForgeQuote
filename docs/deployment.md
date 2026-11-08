@@ -88,7 +88,15 @@ docker compose exec server node prisma/seed.js
 ### 3.4 Accessing the Application
 * **Frontend Web Application**: [http://localhost:5173](http://localhost:5173)
 * **Backend Health Check**: [http://localhost:4000/api/v1/health](http://localhost:4000/api/v1/health)
-* **Database Connection**: `localhost:5432` (User: `forgequote`, Pass: `changeme`, DB: `forgequote`)
+* **Database Connection**: `localhost:5432` (User: `forgequote`, Pass: `changeme_strong_password`, DB: `forgequote`)
+
+#### Pre-Configured Demonstration Accounts (All 4 Personas)
+| Role | Email Address | Password | Mandate & Workflow |
+|---|---|---|---|
+| **Estimator** | `estimator@forgequote.demo` | `Estimator@123` | Costs parts, weights, routings, cycle times, hour rates |
+| **Plant Head** | `planthead@forgequote.demo` | `PlantHead@123` | Checks routings, clears machine capacity (`/routing-checks`) |
+| **Sales Head** | `sales@forgequote.demo` | `Sales@123` | Approves quotes > ₹25L, manages rates, dispatches to OEM |
+| **Managing Director** | `md@forgequote.demo` | `MD@123` | Signs the deal, seals contracts in Deal Room (`/deal-room`) |
 
 ### 3.5 Multi-Stage Production Stack (`docker-compose.prod.yml`)
 For production deployment with optimized static Nginx bundling and hardened non-root backend:
