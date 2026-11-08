@@ -28,7 +28,7 @@ import { formatCurrency, formatLakhCrore } from '../utils/currency';
 export function QuotationDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isSalesHead, isEstimator } = useAuth();
+  const { isSalesHead, isEstimator, isMD } = useAuth();
 
   const { data: quotation, isLoading, isError, error, refetch } = useQuotation(id);
   const [isSendModalOpen, setIsSendModalOpen] = useState(false);
@@ -226,6 +226,64 @@ export function QuotationDetailPage() {
           </span>
         </div>
       )}
+
+      {/* Managing Director Executive Deal Seal Banner */}
+      {quotation.mdSignedAt ? (
+        <div className="p-4 bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 border-2 border-emerald-500/70 rounded-lg text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-emerald-500/20 border border-emerald-400/50 rounded-lg text-emerald-400 shrink-0">
+              <Award className="w-5 h-5 text-emerald-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-bold text-emerald-300 uppercase tracking-wide">
+                  Executive Deal Executed & Sealed
+                </h4>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-200 border border-emerald-600">
+                  MD Countersigned
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1">
+                Signed by <strong>{quotation.mdSignedBy}</strong> on{' '}
+                {new Date(quotation.mdSignedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.
+              </p>
+              {quotation.mdDealNotes && (
+                <p className="text-xs text-emerald-200/90 italic mt-1 bg-white/5 p-2 rounded border border-white/10 font-mono">
+                  "{quotation.mdDealNotes}"
+                </p>
+              )}
+              <div className="text-[10px] font-mono text-emerald-400/80 mt-1.5 flex items-center gap-1.5 truncate">
+                <Lock className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="truncate">Digital Contract Seal: {quotation.mdSignatureHash}</span>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/deal-room')}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold shadow transition shrink-0"
+          >
+            <span>View Deal Room</span>
+          </button>
+        </div>
+      ) : isMD && (quotation.status === 'READY_TO_SEND' || quotation.status === 'SENT' || quotation.status === 'APPROVED') ? (
+        <div className="p-3.5 bg-gradient-to-r from-blue-950 to-indigo-950 border border-blue-500/40 rounded-lg text-white shadow-sm flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Award className="w-5 h-5 text-blue-300 shrink-0" />
+            <div>
+              <h4 className="text-xs font-bold text-blue-200">Executive Deal Seal Available</h4>
+              <p className="text-[11px] text-slate-300">
+                As Managing Director, you can seal this high-value agreement in the Deal Room.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/deal-room')}
+            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-bold shadow transition shrink-0"
+          >
+            Open in Deal Room &rarr;
+          </button>
+        </div>
+      ) : null}
 
       {/* Financial Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

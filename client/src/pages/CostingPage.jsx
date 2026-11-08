@@ -16,9 +16,11 @@ import {
   Package,
   Truck,
   Sparkles,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { usePartCosting, useCalculateCosting, useSaveCosting } from '../hooks/useCosting';
+import { useCreateQuotation } from '../hooks/useQuotations';
 import { useEffectiveRates } from '../hooks/useRates';
 import { OperationsEditor } from '../components/costing/OperationsEditor';
 import { VolumeTiersCard } from '../components/costing/VolumeTiersCard';
@@ -35,6 +37,8 @@ export function CostingPage() {
 
   const calculateMutation = useCalculateCosting(partId);
   const saveMutation = useSaveCosting(partId, partData?.part?.rfqId);
+  const createQuoteMutation = useCreateQuotation(partData?.part?.rfqId);
+  const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -174,6 +178,24 @@ export function CostingPage() {
     }
   };
 
+  const handleGenerateQuotation = async () => {
+    setIsGeneratingQuote(true);
+    try {
+      // 1. Ensure latest costing inputs are saved first
+      await saveMutation.mutateAsync(formData);
+      // 2. Dispatch quotation creation for RFQ
+      const res = await createQuoteMutation.mutateAsync({
+        marginPercentage: formData.grossMarginPercentage || 15.0,
+        gstPercentage: formData.gstPercentage || 18.0,
+      });
+      navigate(`/quotations/${res.id}`);
+    } catch (err) {
+      alert(err.message || 'Failed to generate quotation. Please ensure all parts have configured operations.');
+    } finally {
+      setIsGeneratingQuote(false);
+    }
+  };
+
   const handleApplyRouting = (adoptedOps, sourcePartName, similarityPercentage) => {
     const updated = { ...formData, operations: adoptedOps };
     setFormData(updated);
@@ -249,6 +271,18 @@ export function CostingPage() {
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to RFQ</span>
           </button>
+
+          {isEstimator && (
+            <button
+              onClick={handleGenerateQuotation}
+              disabled={isGeneratingQuote || !formData.operations?.length}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded text-xs font-bold shadow-sm transition disabled:opacity-50"
+              title="Save and dispatch quotation creation"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{isGeneratingQuote ? 'Quoting...' : 'Generate Quotation'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -618,6 +652,19 @@ export function CostingPage() {
             >
               <Save className="w-3.5 h-3.5" />
               <span>{saveMutation.isLoading ? 'Saving...' : 'Save Costing Draft'}</span>
+            </button>
+          )}
+
+          {isEstimator && (
+            <button
+              type="button"
+              onClick={handleGenerateQuotation}
+              disabled={isGeneratingQuote || !formData.operations?.length}
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-sm transition disabled:opacity-50"
+              title="Save latest costing and generate a formal quotation dossier"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{isGeneratingQuote ? 'Generating Quote...' : 'Lock & Generate Quotation'}</span>
             </button>
           )}
 
