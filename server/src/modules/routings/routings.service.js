@@ -190,3 +190,32 @@ export async function applyRoutingSuggestion(user, targetPartId, sourcePartId) {
 
   return result;
 }
+
+/**
+ * Plant Head Routing Review list: fetches parts with operations and verification status
+ */
+export async function getRoutingChecks(user) {
+  const parts = await prisma.part.findMany({
+    where: {
+      operations: { some: {} },
+    },
+    include: {
+      rfq: {
+        select: {
+          id: true,
+          rfqNumber: true,
+          customerName: true,
+          status: true,
+          dueDate: true,
+        },
+      },
+      operations: {
+        orderBy: { operationSequence: 'asc' },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+  });
+
+  return parts;
+}

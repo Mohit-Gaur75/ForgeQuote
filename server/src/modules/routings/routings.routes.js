@@ -9,6 +9,9 @@ const router = Router();
 
 router.use(authenticate);
 
+// Plant Head (and all roles) view routing checks
+router.get('/checks', asyncHandler(routingController.getRoutingChecks));
+
 // Get deterministic routing suggestions for a part (supports both GET and POST)
 router.get('/:id/routing-suggestions', asyncHandler(routingController.getSuggestions));
 router.post('/:id/routing-suggestions', asyncHandler(routingController.getSuggestions));

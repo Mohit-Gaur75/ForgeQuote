@@ -23,13 +23,21 @@ export function TopBar() {
           <div className="text-right">
             <div className="text-xs font-semibold text-slate-800">{user?.name}</div>
             <div className="flex items-center gap-1 justify-end">
-              {role === 'SALES_HEAD' ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.2 bg-purple-50 text-purple-700 border border-purple-200 rounded">
-                  <ShieldCheck className="w-3 h-3" /> SALES HEAD
+              {role === 'MANAGING_DIRECTOR' ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 rounded font-semibold">
+                  <ShieldCheck className="w-3 h-3 text-amber-600" /> MD • SIGNS THE DEAL
+                </span>
+              ) : role === 'PLANT_HEAD' ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded font-semibold">
+                  <Wrench className="w-3 h-3 text-emerald-600" /> PLANT HEAD • CHECKS ROUTINGS
+                </span>
+              ) : role === 'SALES_HEAD' ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded font-semibold">
+                  <ShieldCheck className="w-3 h-3 text-purple-600" /> SALES HEAD • APPROVES & SENDS
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200 rounded">
-                  <Wrench className="w-3 h-3" /> ESTIMATOR
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded font-semibold">
+                  <Wrench className="w-3 h-3 text-blue-600" /> ESTIMATOR • COSTING
                 </span>
               )}
             </div>

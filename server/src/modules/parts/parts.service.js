@@ -181,3 +181,51 @@ export async function deletePart(user, id) {
 
   return { message: 'Part deleted successfully' };
 }
+
+export async function signOffRouting(user, id, { status, notes }) {
+  const existing = await prisma.part.findUnique({
+    where: { id },
+    include: { rfq: true, operations: true },
+  });
+
+  if (!existing) {
+    throw new NotFoundError('Part');
+  }
+
+  const validStatuses = ['VERIFIED', 'REVISION_REQUIRED', 'PENDING_REVIEW'];
+  if (!validStatuses.includes(status)) {
+    throw new ValidationError('Invalid routing review status', [
+      { field: 'status', message: `Must be one of: ${validStatuses.join(', ')}` },
+    ]);
+  }
+
+  const updated = await prisma.part.update({
+    where: { id },
+    data: {
+      routingStatus: status,
+      routingVerifiedBy: user.name,
+      routingVerifiedAt: new Date(),
+      routingNotes: notes || null,
+    },
+    include: { operations: true, rfq: true },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: status === 'VERIFIED' ? 'ROUTING_VERIFIED' : 'ROUTING_REVISION_REQUESTED',
+      entityType: 'PART',
+      entityId: id,
+      newValues: {
+        rfqNumber: existing.rfq?.rfqNumber,
+        partName: existing.partName,
+        verifiedBy: user.name,
+        role: user.role,
+        notes: notes || null,
+        status,
+      },
+    },
+  }).catch(() => {});
+
+  return updated;
+}

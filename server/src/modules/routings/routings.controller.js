@@ -20,3 +20,11 @@ export async function applySuggestion(req, res) {
     data: result,
   });
 }
+
+export async function getRoutingChecks(req, res) {
+  const parts = await routingService.getRoutingChecks(req.user);
+  res.status(200).json({
+    success: true,
+    data: parts,
+  });
+}

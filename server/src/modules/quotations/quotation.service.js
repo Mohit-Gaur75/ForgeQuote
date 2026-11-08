@@ -459,3 +459,99 @@ export async function sendQuotation(user, quotationId, sendData = {}) {
     annualContractValue: Number(quote.annualContractValue),
   };
 }
+
+/**
+ * Get deals for Executive Deal Room (Managing Director view)
+ */
+export async function getDealRoomQuotations(user) {
+  const quotations = await prisma.quotation.findMany({
+    include: {
+      rfq: {
+        select: {
+          id: true,
+          rfqNumber: true,
+          customerName: true,
+          customerType: true,
+          status: true,
+          dueDate: true,
+        },
+      },
+      creator: { select: { id: true, name: true, email: true } },
+      approver: { select: { id: true, name: true, email: true } },
+      parts: {
+        include: {
+          part: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 30,
+  });
+
+  return quotations;
+}
+
+/**
+ * Managing Director signs the deal (Deal Sign-off)
+ */
+export async function signDeal(user, quotationId, { notes } = {}) {
+  const quote = await prisma.quotation.findUnique({
+    where: { id: quotationId },
+    include: { rfq: true },
+  });
+
+  if (!quote) {
+    throw new NotFoundError('Quotation');
+  }
+
+  const signatureHash = `MD-SEAL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+  const signedAt = new Date();
+
+  const updatedQuote = await prisma.$transaction(async (tx) => {
+    // 1. Update quotation with MD digital seal
+    const q = await tx.quotation.update({
+      where: { id: quotationId },
+      data: {
+        mdSignedBy: user.name,
+        mdSignedAt: signedAt,
+        mdSignatureHash: signatureHash,
+        mdDealNotes: notes || 'Deal authorized and executed by Managing Director.',
+      },
+      include: { rfq: true },
+    });
+
+    // 2. Update RFQ deal status to WON
+    await tx.rFQ.update({
+      where: { id: quote.rfqId },
+      data: {
+        status: 'WON',
+        dealSignedAt: signedAt,
+        dealSignedBy: user.name,
+      },
+    });
+
+    // 3. Audit trail
+    await tx.auditLog.create({
+      data: {
+        userId: user.id,
+        action: 'MD_DEAL_SIGNED',
+        entityType: 'QUOTATION',
+        entityId: quotationId,
+        newValues: {
+          quotationNumber: quote.quotationNumber,
+          rfqNumber: quote.rfq.rfqNumber,
+          customerName: quote.rfq.customerName,
+          signedBy: user.name,
+          role: user.role,
+          signatureHash,
+          signedAt: signedAt.toISOString(),
+          notes: notes || null,
+        },
+      },
+    });
+
+    return q;
+  });
+
+  return updatedQuote;
+}

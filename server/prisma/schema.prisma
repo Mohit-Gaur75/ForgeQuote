@@ -17,6 +17,8 @@ datasource db {
 enum Role {
   ESTIMATOR
   SALES_HEAD
+  PLANT_HEAD
+  MANAGING_DIRECTOR
 }
 
 enum RFQStatus {
@@ -106,6 +108,8 @@ model RFQ {
   ownerId      String
   status       RFQStatus @default(ESTIMATING)
   lostReason   String?
+  dealSignedAt DateTime?
+  dealSignedBy String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -133,6 +137,10 @@ model Part {
   scrapPercentage Decimal? @db.Decimal(5, 2)
   annualVolume    Int?
   setupHours      Decimal? @db.Decimal(8, 2)
+  routingStatus   String?  @default("PENDING_REVIEW") // PENDING_REVIEW, VERIFIED, REVISION_REQUIRED
+  routingVerifiedBy String?
+  routingVerifiedAt DateTime?
+  routingNotes    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -209,6 +217,10 @@ model Quotation {
   calculationVersion  String          @default("1.0")
   createdBy           String
   approvedBy          String?
+  mdSignedBy          String?
+  mdSignedAt          DateTime?
+  mdSignatureHash     String?
+  mdDealNotes         String?
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
 

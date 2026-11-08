@@ -17,9 +17,11 @@ async function hashPassword(plaintext) {
 async function main() {
   console.log('🌱 Starting idempotent database seeding...');
 
-  // 1. Users
+  // 1. Users (All 4 Personas from the Problem Statement)
   const estimatorPasswordHash = await hashPassword(process.env.SEED_ESTIMATOR_PASSWORD || 'Estimator@123');
   const salesPasswordHash = await hashPassword(process.env.SEED_SALES_PASSWORD || 'Sales@123');
+  const plantHeadPasswordHash = await hashPassword(process.env.SEED_PLANTHEAD_PASSWORD || 'PlantHead@123');
+  const mdPasswordHash = await hashPassword(process.env.SEED_MD_PASSWORD || 'MD@123');
 
   const estimator = await prisma.user.upsert({
     where: { email: 'estimator@forgequote.demo' },
@@ -45,7 +47,31 @@ async function main() {
     },
   });
 
-  console.log(`✓ Seeded users: ${estimator.email}, ${salesHead.email}`);
+  const plantHead = await prisma.user.upsert({
+    where: { email: 'planthead@forgequote.demo' },
+    update: { passwordHash: plantHeadPasswordHash, isActive: true },
+    create: {
+      name: 'Vikram Shinde (Plant Head — Chakan Works)',
+      email: 'planthead@forgequote.demo',
+      passwordHash: plantHeadPasswordHash,
+      role: 'PLANT_HEAD',
+      isActive: true,
+    },
+  });
+
+  const managingDirector = await prisma.user.upsert({
+    where: { email: 'md@forgequote.demo' },
+    update: { passwordHash: mdPasswordHash, isActive: true },
+    create: {
+      name: 'Suresh Patil (Managing Director)',
+      email: 'md@forgequote.demo',
+      passwordHash: mdPasswordHash,
+      role: 'MANAGING_DIRECTOR',
+      isActive: true,
+    },
+  });
+
+  console.log(`✓ Seeded users: ${estimator.email}, ${salesHead.email}, ${plantHead.email}, ${managingDirector.email}`);
 
   // 2. Rate Masters (Multiple versions with non-overlapping effective dates)
   const baseRates = [
@@ -283,7 +309,7 @@ async function main() {
   ];
 
   const seededParts = [];
-  for (const pd of partDefinitions) {
+  for (const [pIdx, pd] of partDefinitions.entries()) {
     const targetRFQ = rfqs[pd.rfqIndex];
     let part = await prisma.part.findFirst({
       where: { rfqId: targetRFQ.id, partName: pd.partName },
@@ -301,6 +327,10 @@ async function main() {
           scrapPercentage: pd.scrapPercentage,
           annualVolume: pd.annualVolume,
           setupHours: pd.setupHours,
+          routingStatus: pIdx % 2 === 0 ? 'VERIFIED' : 'PENDING_REVIEW',
+          routingVerifiedBy: pIdx % 2 === 0 ? 'Vikram Shinde (Plant Head)' : null,
+          routingVerifiedAt: pIdx % 2 === 0 ? new Date('2026-10-24T16:00:00Z') : null,
+          routingNotes: pIdx % 2 === 0 ? 'Plant feasibility verified: tooling and machine hour rates cleared for Chakan Bay 2.' : null,
         },
       });
 
@@ -345,6 +375,10 @@ async function main() {
       calculationVersion: '1.0',
       createdBy: estimator.id,
       approvedBy: salesHead.id,
+      mdSignedBy: 'Suresh Patil (Managing Director)',
+      mdSignedAt: new Date('2026-10-26T11:00:00Z'),
+      mdSignatureHash: 'MD-DEAL-SEAL-89B72F41A',
+      mdDealNotes: 'Strategic Tier-1 180,000 annual run agreement approved and signed by MD.',
       rateSnapshot: {
         materialRate: 85,
         machineRate: 850,
@@ -398,6 +432,10 @@ async function main() {
       calculationVersion: '1.0',
       createdBy: estimator.id,
       approvedBy: salesHead.id,
+      mdSignedBy: 'Suresh Patil (Managing Director)',
+      mdSignedAt: new Date('2026-10-26T11:00:00Z'),
+      mdSignatureHash: 'MD-DEAL-SEAL-89B72F41A',
+      mdDealNotes: 'Strategic Tier-1 180,000 annual run agreement approved and signed by MD.',
     },
   });
 

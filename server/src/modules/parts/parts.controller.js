@@ -37,3 +37,12 @@ export async function deletePart(req, res) {
     requestId: req.id,
   });
 }
+
+export async function signOffRouting(req, res) {
+  const result = await partService.signOffRouting(req.user, req.params.id, req.body);
+  return res.status(200).json({
+    success: true,
+    data: result,
+    requestId: req.id,
+  });
+}

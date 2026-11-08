@@ -103,6 +103,7 @@ app.use('/api/v1/parts', costingRoutes);
 app.use('/api/v1/rates', ratesRoutes);
 app.use('/api/v1/quotations', quotationRoutes);
 app.use('/api/v1/approvals', approvalRoutes);
+app.use('/api/v1/routings', routingsRoutes);
 app.use('/api/v1/parts', routingsRoutes);
 app.use('/api/v1/history', historyRoutes);
 app.use('/api/v1/audit', auditRoutes);

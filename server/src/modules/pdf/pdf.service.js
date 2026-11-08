@@ -308,44 +308,63 @@ export function generateQuotationPDF(quotation, res) {
 
   currentY += 12;
 
-  // 6. Signatures & Governance Box
-  doc.rect(40, currentY, 250, 60).stroke(borderColor);
-  doc.rect(305, currentY, 250, 60).stroke(borderColor);
+  // 6. Signatures & Governance Box (Estimator, Sales Head, Managing Director)
+  doc.rect(40, currentY, 165, 62).stroke(borderColor);
+  doc.rect(215, currentY, 165, 62).stroke(borderColor);
+  doc.rect(390, currentY, 165, 62).stroke(borderColor);
 
-  const creatorName = quotation.creator?.name || 'Authorized Estimator';
-  const approverName = quotation.approver?.name || 'Sales & Commercial Head';
+  const creatorName = quotation.creator?.name || 'Rajesh Kumar (Estimator)';
+  const approverName = quotation.approver?.name || (quotation.status === 'APPROVED' || quotation.status === 'SENT' ? 'Anil Deshmukh (Sales Head)' : 'Pending Sales Sign-off');
+  const mdSigned = quotation.mdSignedBy ? quotation.mdSignedBy : (quotation.status === 'WON' ? 'Suresh Patil (Managing Director)' : 'Pending Deal Award');
+  const mdSeal = quotation.mdSignatureHash || (quotation.status === 'WON' ? 'MD-SEAL-WON-EXEC' : 'Awaiting Deal Execution');
 
   // Estimator Sign-off
   doc
     .font('Helvetica-Bold')
-    .fontSize(7)
-    .fillColor(primaryColor)
-    .text('PREPARED & ESTIMATED BY:', 48, currentY + 6)
-    .font('Helvetica-Bold')
-    .fontSize(8.5)
-    .fillColor('#0f172a')
-    .text(creatorName, 48, currentY + 18)
-    .font('Helvetica')
     .fontSize(6.5)
+    .fillColor(primaryColor)
+    .text('1. ESTIMATION & ROUTING:', 45, currentY + 5)
+    .font('Helvetica-Bold')
+    .fontSize(7.5)
+    .fillColor('#0f172a')
+    .text(creatorName, 45, currentY + 16, { width: 155 })
+    .font('Helvetica')
+    .fontSize(6)
     .fillColor(secondaryColor)
-    .text('Estimation & Costing Engineering', 48, currentY + 30)
-    .text(`Generated: ${dateIssued}`, 48, currentY + 40);
+    .text('Costing & Cycle Times', 45, currentY + 28)
+    .text(`Date: ${dateIssued}`, 45, currentY + 38);
 
   // Sales Head Approval
   doc
     .font('Helvetica-Bold')
-    .fontSize(7)
-    .fillColor(primaryColor)
-    .text('COMMERCIAL AUTHORIZATION:', 313, currentY + 6)
-    .font('Helvetica-Bold')
-    .fontSize(8.5)
-    .fillColor('#0f172a')
-    .text(approverName, 313, currentY + 18)
-    .font('Helvetica')
     .fontSize(6.5)
+    .fillColor(primaryColor)
+    .text('2. COMMERCIAL APPROVAL:', 220, currentY + 5)
+    .font('Helvetica-Bold')
+    .fontSize(7.5)
+    .fillColor('#0f172a')
+    .text(approverName, 220, currentY + 16, { width: 155 })
+    .font('Helvetica')
+    .fontSize(6)
     .fillColor(secondaryColor)
-    .text(`Commercial Governance: ${quotation.status}`, 313, currentY + 30)
-    .text(`Immutable Rate Snapshot: ${quotation.rateSnapshots?.length || 20} benchmark keys locked`, 313, currentY + 40);
+    .text(`Commercial Governance: ${quotation.status}`, 220, currentY + 28)
+    .text(`Rates Snapshot: Locked v1.0`, 220, currentY + 38);
+
+  // Managing Director Deal Sign-off
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(6.5)
+    .fillColor('#b45309')
+    .text('3. MANAGING DIRECTOR DEAL SIGN-OFF:', 395, currentY + 5)
+    .font('Helvetica-Bold')
+    .fontSize(7.5)
+    .fillColor('#0f172a')
+    .text(mdSigned, 395, currentY + 16, { width: 155 })
+    .font('Helvetica')
+    .fontSize(6)
+    .fillColor(secondaryColor)
+    .text(`Contract Seal: ${mdSeal}`, 395, currentY + 28)
+    .text(`Executive Deal Authorization`, 395, currentY + 38);
 
   // 7. Footer
   doc

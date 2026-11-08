@@ -36,7 +36,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-slate-900 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-800 overflow-hidden">
+      <div className="w-full max-w-lg bg-white rounded-xl shadow-2xl border border-slate-800 overflow-hidden">
         {/* Header Branding */}
         <div className="bg-slate-950 p-6 text-center border-b border-slate-800">
           <div className="inline-flex w-12 h-12 rounded-xl bg-blue-600 items-center justify-center text-white mb-3 shadow-lg shadow-blue-500/20">
@@ -114,41 +114,80 @@ export function LoginPage() {
             </button>
           </form>
 
-          {/* Demonstration Quick Selectors */}
+          {/* Demonstration Quick Selectors for All 4 Personas */}
           <div className="mt-6 pt-5 border-t border-slate-200">
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-2">
-              Select Demo Persona
-            </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between mb-2">
+              <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Select Persona (Problem Statement)
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">Company A Roles</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* 1. Estimator */}
               <button
                 type="button"
                 onClick={() => handleDemoAccountSelect('estimator@forgequote.demo', 'Estimator@123')}
                 className="p-2.5 text-left border border-slate-200 hover:border-blue-400 rounded-lg hover:bg-blue-50/50 transition group"
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 group-hover:text-blue-700">
-                  <UserCheck className="w-3.5 h-3.5 text-blue-600" />
+                  <UserCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <span>Estimator</span>
                 </div>
-                <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">
+                <div className="text-[10px] text-blue-600 font-medium mt-0.5">Costs parts & cycle times</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">
                   estimator@forgequote.demo
                 </div>
               </button>
 
+              {/* 2. Plant Head */}
+              <button
+                type="button"
+                onClick={() => handleDemoAccountSelect('planthead@forgequote.demo', 'PlantHead@123')}
+                className="p-2.5 text-left border border-slate-200 hover:border-emerald-400 rounded-lg hover:bg-emerald-50/50 transition group"
+              >
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 group-hover:text-emerald-700">
+                  <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Plant Head</span>
+                </div>
+                <div className="text-[10px] text-emerald-600 font-medium mt-0.5">Checks routings & machines</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">
+                  planthead@forgequote.demo
+                </div>
+              </button>
+
+              {/* 3. Sales Head */}
               <button
                 type="button"
                 onClick={() => handleDemoAccountSelect('sales@forgequote.demo', 'Sales@123')}
                 className="p-2.5 text-left border border-slate-200 hover:border-purple-400 rounded-lg hover:bg-purple-50/50 transition group"
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 group-hover:text-purple-700">
-                  <UserCheck className="w-3.5 h-3.5 text-purple-600" />
+                  <UserCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
                   <span>Sales Head</span>
                 </div>
-                <div className="text-[10px] text-slate-500 font-mono mt-0.5 truncate">
+                <div className="text-[10px] text-purple-600 font-medium mt-0.5">Approves & sends quotes</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">
                   sales@forgequote.demo
                 </div>
               </button>
+
+              {/* 4. Managing Director */}
+              <button
+                type="button"
+                onClick={() => handleDemoAccountSelect('md@forgequote.demo', 'MD@123')}
+                className="p-2.5 text-left border border-slate-200 hover:border-amber-400 rounded-lg hover:bg-amber-50/50 transition group"
+              >
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800 group-hover:text-amber-700">
+                  <UserCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Managing Director</span>
+                </div>
+                <div className="text-[10px] text-amber-600 font-medium mt-0.5">Signs the final deal</div>
+                <div className="text-[9px] text-slate-400 font-mono truncate">
+                  md@forgequote.demo
+                </div>
+              </button>
             </div>
-            <p className="text-[10px] text-slate-400 mt-2 text-center">
+            <p className="text-[10px] text-slate-400 mt-2.5 text-center">
               Argon2id cryptographic hash verification • 24hr server-side session
             </p>
           </div>

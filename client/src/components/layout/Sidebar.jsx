@@ -8,16 +8,20 @@ import {
   CheckCircle2,
   Search,
   Factory,
+  Cpu,
+  Briefcase,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 export function Sidebar() {
-  const { isSalesHead, isEstimator } = useAuth();
+  const { isSalesHead, isEstimator, isPlantHead, isMD } = useAuth();
 
   const navItems = [
     { label: 'RFQ Register', path: '/rfqs', icon: FileSpreadsheet, show: true },
     { label: 'Rate Masters', path: '/rates', icon: Layers, show: true },
-    { label: 'Approval Inbox', path: '/approvals', icon: CheckCircle2, show: isSalesHead },
+    { label: 'Routing Checks', path: '/routing-checks', icon: Cpu, show: true },
+    { label: 'Approval Inbox', path: '/approvals', icon: CheckCircle2, show: isSalesHead || isMD },
+    { label: 'Executive Deal Room', path: '/deal-room', icon: Briefcase, show: isMD || isSalesHead },
     { label: 'Historical Search', path: '/history', icon: Search, show: true },
   ];
 

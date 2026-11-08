@@ -15,6 +15,9 @@ const router = Router();
 
 router.use(authenticate);
 
+// Managing Director Executive Deal Room (list high-value / won quotes)
+router.get('/deal-room/list', asyncHandler(quotationController.getDealRoomQuotations));
+
 // Get quotation details by ID
 router.get('/:id', asyncHandler(quotationController.getQuotation));
 
@@ -23,6 +26,13 @@ router.get('/:id/pdf', asyncHandler(quotationController.downloadQuotationPDF));
 
 // Submit quotation for commercial approval
 router.post('/:id/submit', asyncHandler(quotationController.submitQuotation));
+
+// Managing Director Deal Sign-off
+router.post(
+  '/:id/sign-deal',
+  requireRole('MANAGING_DIRECTOR'),
+  asyncHandler(quotationController.signDeal)
+);
 
 // Direct approval / rejection aliases (contract compliance)
 router.post(

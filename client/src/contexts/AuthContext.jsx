@@ -43,6 +43,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     isEstimator: user?.role === 'ESTIMATOR',
     isSalesHead: user?.role === 'SALES_HEAD',
+    isPlantHead: user?.role === 'PLANT_HEAD',
+    isMD: user?.role === 'MANAGING_DIRECTOR',
     isLoading,
     login,
     logout,

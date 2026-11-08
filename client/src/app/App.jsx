@@ -11,6 +11,8 @@ import { CostingPage } from '../pages/CostingPage';
 import { ApprovalInboxPage } from '../pages/ApprovalInboxPage';
 import { QuotationDetailPage } from '../pages/QuotationDetailPage';
 import { HistoryPage } from '../pages/HistoryPage';
+import { RoutingChecksPage } from '../pages/RoutingChecksPage';
+import { DealRoomPage } from '../pages/DealRoomPage';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -57,7 +59,9 @@ export function App() {
         <Route path="costing/:id" element={<CostingPage />} />
         <Route path="quotations/:id" element={<QuotationDetailPage />} />
         <Route path="rates" element={<RateMasterPage />} />
+        <Route path="routing-checks" element={<RoutingChecksPage />} />
         <Route path="approvals" element={<ApprovalInboxPage />} />
+        <Route path="deal-room" element={<DealRoomPage />} />
         <Route path="history" element={<HistoryPage />} />
       </Route>
 
