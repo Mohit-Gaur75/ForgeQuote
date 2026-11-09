@@ -1,6 +1,11 @@
 # ForgeQuote — Technical Design Document (TDD)
 **AI-Powered RFQ Costing and Quotation Management System**
 
+* **GitHub Repository**: [https://github.com/Mohit-Gaur75/ForgeQuote](https://github.com/Mohit-Gaur75/ForgeQuote)
+* **Author / Candidate**: Mohit Gaur
+* **Target Enterprise**: Company A, Chakan, Pune, Maharashtra
+* **Version**: 1.0 (Production Candidate)
+
 ---
 
 ## 1. Executive Summary & Business Context

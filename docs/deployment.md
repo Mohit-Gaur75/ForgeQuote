@@ -1,5 +1,9 @@
 # ForgeQuote — Deployment and Operations Guide
 
+* **GitHub Repository**: [https://github.com/Mohit-Gaur75/ForgeQuote](https://github.com/Mohit-Gaur75/ForgeQuote)
+* **Author / Candidate**: Mohit Gaur
+* **Target Enterprise**: Company A, Chakan, Pune, Maharashtra
+
 This guide provides complete instructions for running ForgeQuote locally via Docker Compose, running in local development mode without Docker, and deploying to cloud production platforms (Vercel, Render, and Neon PostgreSQL).
 
 All terminal commands are tested and formatted for **Windows PowerShell** as well as standard POSIX shells.
@@ -32,7 +36,7 @@ Copy-Item .env.example .env
 |---|---|---|---|
 | `NODE_ENV` | Yes | `development` | Runtime environment (`development`, `production`, `test`) |
 | `PORT` | Yes | `4000` | Express backend listening port |
-| `DATABASE_URL` | Yes | `postgresql://forgequote:changeme@postgres:5432/forgequote?schema=public` | PostgreSQL connection string |
+| `DATABASE_URL` | Yes | `postgresql://forgequote:changeme_strong_password@postgres:5432/forgequote?schema=public` | PostgreSQL connection string |
 | `SESSION_SECRET` | Yes | *Random 32+ char string* | Used for cryptographic session signing and hashing |
 | `SESSION_EXPIRY_HOURS` | Yes | `24` | Session lifetime in hours |
 | `COOKIE_SECURE` | Yes | `false` (dev) / `true` (prod) | Enforce HTTPS-only cookie transmission |
@@ -45,6 +49,8 @@ Copy-Item .env.example .env
 | `AUTH_RATE_LIMIT_MAX` | No | `10` | Max login attempts per IP per window |
 | `SEED_ESTIMATOR_PASSWORD` | No | `Estimator@123` | Password for seeded estimator account |
 | `SEED_SALES_PASSWORD` | No | `Sales@123` | Password for seeded sales head account |
+| `SEED_PLANT_HEAD_PASSWORD` | No | `PlantHead@123` | Password for seeded plant head account |
+| `SEED_MD_PASSWORD` | No | `MD@123` | Password for seeded Managing Director account |
 | `APPROVAL_THRESHOLD` | No | `2500000` | Approval threshold in INR (₹25,00,000) |
 | `VITE_API_URL` | Yes (FE) | `http://localhost:4000` | Backend API base URL consumed by Vite client |
 
